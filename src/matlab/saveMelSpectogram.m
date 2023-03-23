@@ -9,8 +9,11 @@ function save_melSpectogram(path, z, folder_path)
                    'NumBands',64, ...s
                    'FrequencyRange',[0,z]);
     out_path = replace(path, ".wav", "_melSpectogram.jpeg");
+    [filepath, name, ext] = fileparts(out_path);
+    t = replace(name, "_", "-");
+    title(t);
     if nargin == 3
-        [filepath, name, ext] = fileparts(out_path);
+
         out_path = append(folder_path, name, ext);
 
     saveas(gcf, out_path);
