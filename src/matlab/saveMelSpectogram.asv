@@ -1,25 +1,27 @@
 function saveMelSpectogram(path, folder_path)
 %author: Wojciech Matejuk
 %produce spectogram of audio file, z = max frequency
+%output is normalised to 40 secounds and z Hz
     [y, Fs] = audioread(path);
+    Fs
     out_path = replace(path, ".wav", "_melSpectogram.jpeg");
+    out_path = replace(out_path, ".mp3", "_melSpectogram.jpeg");
     windowSize = 2048;[~, name, ext] = fileparts(out_path);
     tmp = char(name);
-    if(strcmp(tmp(1:2), '22'))
-        f = 22050;
+    if(tmp(1:2)=='44')
+        name
     end
-    if(strcmp(tmp(1:2), '44'))
-        f = 44100;
+    if(tmp(1:2)=='44')
+        name
     end
-    if(strcmp(tmp(1:2), '96'))
-        f = 96000;
+    if(tmp(1:2)=='96')
+        F
     end
 
     melSpectrogram(y, Fs, ...
                     'Window',hann(windowSize,'periodic'), ...
                     'OverlapLength',256, ...
                     'FFTLength',2048, ...
-                    'FrequencyRange',[0,f/2],...
                     'NumBands',64)
     
     
