@@ -1,4 +1,4 @@
-# make a spectogram of every audio file
+#make a wave plot of every audio file
 import matlab.engine
 import os
 from tqdm import tqdm
@@ -9,7 +9,7 @@ data = "../data/"
 directory = os.listdir(data)
 for file in tqdm(directory):
     try:
-        eng.saveMelSpectogram("../../data/" + file,
-                              "../../plots/melSpectograms/", nargout=0)
+        eng.saveWave("../../data/" + file,
+                          "../../plots/WavePlots/", nargout=0)
     finally:
         continue
