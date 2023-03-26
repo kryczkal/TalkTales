@@ -1,1 +1,4 @@
 *.asv
+.*
+data/*
+plots/*

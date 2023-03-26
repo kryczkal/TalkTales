@@ -82,7 +82,7 @@ classdef Comparer_exported < matlab.apps.AppBase
 
             
             ttl = replace(name, "_", "-");
-            app.Label.Text = ttl;
+            app.Label2.Text = ttl;
             drawnow;
             [S,F,T] = pspectrum(transpose(y),f,'spectrogram', 'FrequencyLimits',[0 f/2],'MinThreshold',-110);
  
@@ -148,7 +148,7 @@ classdef Comparer_exported < matlab.apps.AppBase
 
             
             ttl = replace(name, "_", "-");
-            app.Label.Text = ttl;
+            app.Label2.Text = ttl;
             drawnow;
 
             [S,F,T] = pspectrum(transpose(y),f,'spectrogram', 'FrequencyLimits',[0 f/2],'MinThreshold',-110);
