@@ -1,4 +1,4 @@
-function master_fourier(file_name, low_bar, high_bar, N1, N2)
+function basic_filter_plot(file_name, low_bar, high_bar, N1, N2)
     tiledlayout(2,3)
     [y,Fs]=audioread("data\"+file_name);
     [N,P]=size(y); 
