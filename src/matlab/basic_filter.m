@@ -1,4 +1,4 @@
-function master_Fourier_clean(file_name, low_bar, high_bar, N1, N2)
+function basic_filter(file_name, low_bar, high_bar, N1, N2)
     [y,Fs]=audioread("data\"+file_name);
     
     if nargin == 1
