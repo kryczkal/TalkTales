@@ -2,9 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from librosa import load
 from scipy.signal import spectrogram
-from copy import deepcopy
 from bisect import bisect_left
 from help_func import factorize
+import soundfile as sf
+
+
+SAVE_PATH = ""
 
 class aud:
     def __init__(self, samples, freq = -1):
@@ -12,20 +15,23 @@ class aud:
         if freq == -1:
             self.data, self.freq = load(samples)
             self.data = np.array(self.data)
+            self.name = samples
         else:
             self.data = np.array(samples)
             self.freq = freq
 
+        self.__reset()
+    
+    def __reset(self):
+        self.name = ''
         self.frames = len(self.data)
         self.duration = self.frames / float(self.freq)
-        self.fourier = -1
-        self.freq_domain = -1
-        self.name = ""
         self.time_domain = -1
-
+        self.freq_domain = -1
+        self.fourier = -1
 
     def __plot_name(self, name):
-        if self.name != "":
+        if self.name != '':
             plt.title(str(name) + " plot of: " + self.name)
         else:
             plt.title("Undefined audio " + str(name) + " plot")
@@ -83,7 +89,7 @@ class aud:
         
         #Calculating db value of all windows
         chunks = np.array_split(self.data, num_of_chunks)
-        chunks = [-10 * np.log10(np.sqrt(np.mean(chunk ** 2))) for chunk in chunks]
+        chunks = [20 * np.log10(np.abs(np.mean(chunk))) for chunk in chunks]
 
         #creating proper time domain
         time = np.linspace(0, self.duration, num_of_chunks)
@@ -97,7 +103,7 @@ class aud:
         
         return line
     
-    def setup_mel_plot(self, w_size = 0.05, overlap = 0.025):
+    def setup_spect_plot(self, w_size = 0.05, overlap = 0.025):
         wind = int (self.freq * w_size)
         noverlap = int (self.freq * overlap)
         
@@ -120,17 +126,12 @@ class aud:
 
         for i in range(1, len(chunks)):
             stop = bisect_left(freq, float(chunks[i]))
-            out.append(aud(np.fft.ifft(np.pad(self.fourier[start:stop], (start, self.frames-stop))), self.freq))
+            data = np.fft.ifft(np.pad(self.fourier[start:stop], (start, self.frames-stop)))
+            out.append(aud(data, self.freq))
             start = stop
-            print(len(out[i-1].data))
+            #print(len(out[i-1].data))
         
         return out
-
-    def __lshift__(self, other):
-        if (type(other) == type(self)): #????????
-            self = deepcopy(other)
-        else:
-            raise Exception("WTF")
 
     def __add__(self, other):
         if (len(self.data) != len(other.data) or self.freq != other.freq):
@@ -143,9 +144,59 @@ class aud:
             other.calculate_fourier()
         
         
-        
         return aud(np.fft.ifft(self.fourier + other.fourier), self.freq)
+    
+
+    def __sub__(self, other):
+        if (len(self.data) != len(other.data) or self.freq != other.freq):
+            raise Exception("Aby odjac tracki musza miec tyle samo probek i ta sama czestotliwosc")
         
+        if self.fourier == -1:
+            self.calculate_fourier()
+        
+        if other.fourier == -1:
+            other.calculate_fourier()
+
+        return aud(np.fft.ifft(self.fourier + other.fourier), self.freq)
+    
+
+    def __mul__(self, other: float):
+        if self.fourier == -1:
+            self.calculate_fourier()
+
+        return aud(np.ifft(self.fourier * other), self.freq)
+
+
+    def __rshift__(self, other):
+        if type(other) != type(self):
+            raise Exception("Halo obudz sie byku, probojesz jakies gowna tu polaczyc")
+        if self.freq != other.freq:
+            raise Exception("Tracki musza miec ta sama czestotliwosc probkowania aby zsumoawc probki")
+        
+        other.data = np.concatenate((self.data, other.data))
+        other.__reset()
+
+    def __lshift__(self, other):
+        if type(other) != type(self):
+            raise Exception("Halo obudz sie byku, probojesz jakies gowna tu polaczyc")
+        if self.freq != other.freq:
+            raise Exception("Tracki musza miec ta sama czestotliwosc probkowania aby zsumoawc probki")
+        
+        self.data = np.concatenate((self.data, other.data))
+        self.__reset()
+
+        
+    def save_to_wav(self, path: str = '', name: str = ''):        
+        if name == '' and self.name == '':
+            name = 'output'
+        elif name == '':
+            name = self.name
+
+        if path == '':
+            path = SAVE_PATH
+
+        sf.write(path + name + '.wav', self.data, self.freq)
+    
 
 def plot_aud_array(input: list[aud], plot_type='def'):
     if plot_type == 'def':
@@ -154,15 +205,31 @@ def plot_aud_array(input: list[aud], plot_type='def'):
         plocior = aud.setup_db_plot
     elif plot_type == 'fourier':
         plocior = aud.setup_plot_fourier
-    elif plot_type == 'mel':
-        plocior = aud.setup_mel_plot
+    elif plot_type == 'spect':
+        plocior = aud.setup_spect_plot
+    else:
+        raise Exception("Jedyne dostepne opcje: def, db, fourier, spect")
+    
+    if len(input) <2:
+        raise Exception("Tablica musi miec co najmniej 2 elementy")
 
     size = factorize(len(input))
-    
-    axes: list[plt.axis]
 
     for i in range(len(input)):
         plt.subplot(size[0], size[1], i+1)
         plocior(input[i])
 
     plt.show()
+
+
+def save_aud_array(input: list[aud],path: str = '' ,name_list: list[str]= []):
+    if len(input) <2:
+        raise Exception("Tablica musi miec co najmniej 2 elementy")
+    
+    if len(input) > len(name_list):
+        for i in range(len(input) - len(name_list)):
+            name_list.append('undefined_out_' + str(i))
+
+    for i in range(len(input)):
+        input[i].save_to_wav(path, name_list[i])
+    
