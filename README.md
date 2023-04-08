@@ -14,9 +14,9 @@
    
    Po przygotowaniu wykresu wywolujemy objekt.plot()
    
- 3)Przygotowane są metody do przeprowadzania odpowiednich obliczń
+3) Przygotowane są metody do przeprowadzania odpowiednich obliczń
  
- 4)Metoda objekt.split_to_chunks((x1, x2 ,x3, ...)) zwraca tablice klass aud ktore reprezentuja rozbite bazowe audio na podane przedzialy czestotliwosci np:
+4) Metoda objekt.split_to_chunks((x1, x2 ,x3, ...)) zwraca tablice klass aud ktore reprezentuja rozbite bazowe audio na podane przedzialy czestotliwosci np:
   
   
     tab = obj1.split_to_chunks((0,500,1500,3000,6000)) - rozbija audio na 4 sciezki z przedzialow czestotliwosc: 0-500, 500-1500, 1500-3000, 3000-6000
