@@ -5,3 +5,5 @@ Repo/*
 *.wav
 *.m
 test.py
+projects/*
+AudaCity/*

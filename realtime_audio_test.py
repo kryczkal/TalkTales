@@ -1,31 +1,25 @@
 from aud_process import aud
 from aud_process import plot_aud_array
 from aud_process import save_aud_array
+import aud_process
+
+aud_process.SAVE_PATH = ''
+
 
 name = "44_pokoj_sofia_rode.wav"
-name2 = "44_metro_sofia_rode.wav"
+name2 = "44_pokoj_sofia_samson.wav"
+signed16 = 'Signed-16-bit-PCM'
+signed24 = 'Signed-24-bit-PCM'
+
 
 obj1 = aud(name)
-obj1.save_to_wav()
 
-
-tab = obj1.split_to_chunks((0,500,1500,3000,6000))
-
-tab[0].save_to_wav()
-
-# save_aud_array(tab)
-# plot_aud_array(tab)
-
-
-
-# obj2 = tab[3] + tab[2] + tab[1] + tab[0]
-
-# obj2.setup_def_plot()
-# obj2.plot()
 
 #TODO:
-#-potrzebne operacje
-#-odszumianie aproksymacja liniowa lub filtry przepustowe
-#-popraw to co jest
-#-dodaj opisy
-#-sprawdz w akcji - strumienie
+# odszumianie aproksymacja liniowa lub filtry przepustowe
+# poprawic integralnosc
+# dodaj opisy
+# sprawdz w akcji - strumienie
+# popraw wyswietlanie wykresow - dodaj mozliwosc wyswietlenie konretnego przedzialu czasowego
+# dodaj odczyt z mikrofonu
+# 
