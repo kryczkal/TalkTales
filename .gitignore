@@ -1,4 +1,4 @@
 *.asv
-.*
+.idea
 data/*
 plots/*
