@@ -1,25 +1,39 @@
-from aud_process import aud
-from aud_process import plot_aud_array
-from aud_process import save_aud_array
-import aud_process
+from aud_process import *
 
-aud_process.SAVE_PATH = ''
+SAVE_PATH = 'Out/'
+LOAD_PATH = 'In/'
 
 
 name = "44_pokoj_sofia_rode.wav"
 name2 = "44_pokoj_sofia_samson.wav"
-signed16 = 'Signed-16-bit-PCM'
-signed24 = 'Signed-24-bit-PCM'
 
 
-obj1 = aud(name)
+
+#Przykladowa inicjalizacja objektow dzwiekowych
+#pliki sa szukane w LOAD_PATH i zapisywane w SAVE_PATH
+#obj1 = aud(name)
+#obj2 = aud_process.read_from_mic(5000)
+#obj3 = aud(name2)
 
 
-#TODO:
-# odszumianie aproksymacja liniowa lub filtry przepustowe
-# poprawic integralnosc
-# dodaj opisy
-# sprawdz w akcji - strumienie
-# popraw wyswietlanie wykresow - dodaj mozliwosc wyswietlenie konretnego przedzialu czasowego
-# dodaj odczyt z mikrofonu
-# 
+#Podzielenie objektu na kilka przedzialow czestotliwosci, zwraca tablice obiektow
+#tab = obj1.split_to_freq_chunks((300, 1000, 3000))
+#obj1.plot_all()
+
+
+#zapis do pliku mozna w wywolaniu dodatkowo podac nazwe zapisu lub sciezke
+#obj1.save_to_wav()
+
+
+#Plotowanie wszystkich wykresow w jednym okienku
+#obj2.plot_all()
+
+
+#Obciecie przedzialu czasowego na podany w milisekundach
+#obj2.change_interval(1500,3000)
+#obj2.plot_db()
+
+
+#Wyplotowanie wykresu podanego jako drugi argument po kolei z kazdego elementu podanej tablicy,
+#Jesli trzeci argument jest true wyswietla kolejne wykresy w kolejnych okienkach
+#plot_aud_array([obj1, obj2], 'all', True)

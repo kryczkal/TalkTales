@@ -14,4 +14,3 @@ def factorize(x: int):
     for i in range(val, 1,shift):
         if (x % float(i) == 0):
             return (i, int(x/i))
-

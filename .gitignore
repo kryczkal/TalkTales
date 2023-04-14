@@ -7,3 +7,4 @@ Repo/*
 test.py
 projects/*
 AudaCity/*
+*.xml
