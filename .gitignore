@@ -2,3 +2,4 @@
 .idea
 data/*
 plots/*
+*__pycache__/
