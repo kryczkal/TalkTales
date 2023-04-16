@@ -7,11 +7,16 @@ import soundfile as sf
 from copy import deepcopy
 import pyaudio as pyaud
 from librosa.feature import melspectrogram
-from librosa.display import specshow
 from librosa import power_to_db
+from librosa.display import specshow
+import librosa as lib
+from scipy.signal import medfilt
 
 SAVE_PATH = ""
 LOAD_PATH = ""
+PLOT_SAVE_PATH = Plot_save_path="C:/Users/Jlisowskyy/Desktop/PTI/AUD/Projekt_audio_processing/JPEGS/"
+
+MULT = 0
 
 class aud:
     def __init__(self, samples, freq = -1):
@@ -19,13 +24,15 @@ class aud:
         if freq == -1:
             self.data, self.freq = sf.read(LOAD_PATH + samples)
             self.__to_mono_array() #obcicie do mono i ustawienie np.array
-            self.name = samples
         else:
             self.data = samples
             self.__to_mono_array()
             self.freq = freq
 
         self.__reset()
+        
+        if freq == -1:
+            self.name = samples
     
     def __reset(self, name: str = ''):
         self.name = name
@@ -38,7 +45,7 @@ class aud:
 
     def __plot_name(self, name):
         if self.name != '':
-            plt.title(str(name) + " plot of: " + self.name)
+            plt.title(str(name) + " plot of: " + str(self.name))
         else:
             plt.title("Undefined audio " + str(name) + " plot")
     
@@ -125,7 +132,7 @@ class aud:
         self.__reset(self.name)
 
     def setup_def_plot(self):
-        if self.time_domain == -1:
+        if type(self.time_domain) == int:
             self.calculate_time_domain()
 
 
@@ -200,7 +207,7 @@ class aud:
         return out
     
     def split_to_time_chunks(self, chunks: tuple):
-        if type(chunks) != tuple and type(chunks != tuple):
+        if type(chunks) != tuple and type(chunks) != list:
             raise Exception("Odcinki musza byc podane jako krotka lub lista tzn [x1,x2,x3...], lub w otwartych nawiasach ")
 
         out = []
@@ -279,8 +286,9 @@ class aud:
     def save_to_wav(self, name: str = 'output', path: str = SAVE_PATH):        
         if name == 'output' and self.name != '':
             name = self.name
-
-        sf.write(path + name + '.wav', self.data, self.freq)
+            sf.write(path + name, self.data, self.freq)
+        else:
+            sf.write(path + name + '.wav', self.data, self.freq)
 
     def plot_def(self):
         self.setup_def_plot()
@@ -327,8 +335,10 @@ def plot_aud_array(input: list[aud], plot_type='def', mult_windows = False):
         plocior = aud.setup_spect_plot
     elif plot_type == 'all':
         plocior = aud.setup_all
+    elif plot_type == 'mel':
+        plocior = aud.setup_mel_plot
     else:
-        raise Exception("Jedyne dostepne opcje: def, db, fourier, spect")
+        raise Exception("Jedyne dostepne opcje: def, db, fourier, spect, all")
     
     if len(input) <2:
         raise Exception("Tablica musi miec co najmniej 2 elementy")
@@ -349,6 +359,36 @@ def plot_aud_array(input: list[aud], plot_type='def', mult_windows = False):
 
     plt.show()
 
+def save_plot_aud_array(input: list[aud], plot_type='def', mult_windows = False):
+    if plot_type == 'def':
+        plocior = aud.setup_def_plot
+    elif plot_type == 'db':
+        plocior = aud.setup_db_plot
+    elif plot_type == 'fourier':
+        plocior = aud.setup_fourier_plot
+    elif plot_type == 'spect':
+        plocior = aud.setup_spect_plot
+    elif plot_type == 'all':
+        plocior = aud.setup_all
+    else:
+        raise Exception("Jedyne dostepne opcje: def, db, fourier, spect, all")
+    
+    if mult_windows == False:
+        size = factorize(len(input))
+
+        if size[0] == 1:
+            size = factorize(len(input)+1)
+
+        for i in range(len(input)):
+            plt.subplot(size[0], size[1], i+1)
+            plocior(input[i])
+
+        plt.savefig(str(MULT) + "GroupPlot.jpg")
+    else:
+        for i in range(len(input)):
+            plocior(input[i])
+            plt.savefig(PLOT_SAVE_PATH + str(input[i].name)+ ".jpg")
+        plt.close()
 
 def save_aud_array(input: list[aud] , name_list: list[str]= [] , path: str = ''):
     if len(input) <2:
@@ -368,3 +408,14 @@ def read_from_mic(duration: float = 1000, freq: int = 44100, format = pyaud.paFl
     stream = stream.open(format=format, channels=1, rate=freq, input=True, frames_per_buffer=chunk)
 
     return aud(np.frombuffer(stream.read(chunk), dtype=np.float32), freq)
+
+def standard_filter(arg: aud) -> aud:
+    ret = deepcopy(arg)
+    ret = ret.split_to_freq_chunks((100,15000))
+    ret = aud(lib.effects.preemphasis(ret.data, coef=0.97), ret.freq)
+    ret = ret.split_to_freq_chunks((100,15000))
+    ret = aud(lib.util.normalize(ret.data), ret.freq)
+    data, _ = lib.effects.trim(ret.data, top_db=20)
+    ret = aud(data,ret.freq)
+    ret.name = arg.name
+    return ret
