@@ -3,17 +3,35 @@ from sys import argv
 from transformers import AutoTokenizer, AutoModelForMaskedLM, pipeline
 from typing import List
 from copy import deepcopy
+<<<<<<< HEAD
+=======
+import numpy as np
+
+# pip install numpy
+# pip install torch
+# pip install transformers
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
 
 # suppress pool size warnings
 from transformers import logging
 logging.set_verbosity_error()
 
 #Settings
+<<<<<<< HEAD
 PROBABILITY_TRESHOLD = 0.1
 MODEL_NAME = "allegro/herbert-large-cased"
 TOKENIZER_NAME = "allegro/herbert-large-cased"
 DEBUG = 1
 HARD_DEBUG = 1
+=======
+DYNAMIC_TRESHOLD = True
+PERCENTILE_VALUE = 25
+PROBABILITY_TRESHOLD = 0.1
+MODEL_NAME = "allegro/herbert-large-cased"
+TOKENIZER_NAME = "allegro/herbert-large-cased"
+DEBUG = 0
+HARD_DEBUG = 0
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
 #
 if (DEBUG!=1):
     HARD_DEBUG = 0
@@ -61,7 +79,12 @@ def getWordProbability(tokens: List[str]) -> List[float]:
     total_probability = 0
     syllable_count = 0
     probabilities_of_words = []
+<<<<<<< HEAD
     print("Zamieniam zdanie na Tokeny:",tokens)
+=======
+    if (HARD_DEBUG):
+        print("Zamieniam zdanie na Tokeny:",tokens)
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
     for index, token in enumerate(tokens):
         syllable_count+=1
         total_probability += probabilities[token] 
@@ -166,7 +189,11 @@ def upgradeSentence(sentence: str) -> str:
         print("Kalkuluje prawdopodobienstwo wystepowania kazdego slowa")
     #badamy prawdopodobienstwo wystepowania kazdego slowa
     probabilities = getWordProbability(tokens)
+<<<<<<< HEAD
 
+=======
+    PROBABILITY_TRESHOLD = np.percentile(probabilities, PERCENTILE_VALUE)
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
     if(DEBUG):
         print("Wyniki: ", probabilities)
         print("Liczba prawdopodobieństw:",len(probabilities))
@@ -174,6 +201,11 @@ def upgradeSentence(sentence: str) -> str:
     #dodajemy w petli sugestie dla malo prawdopodobnych slow
     added_suggestions = 0
 
+<<<<<<< HEAD
+=======
+    suggested_words = {}
+
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
     if(DEBUG):
         print("Generuje sugestie dla każdego mało prawdopodobnego słowa")
     
@@ -195,6 +227,7 @@ def upgradeSentence(sentence: str) -> str:
             #suggestion = " (" + suggestion + ") "
             #sentence.insert(i + added_suggestions + 1, suggestion)
             # print("Index ",i," Slowo:",sentence[i]," Proponuje zamienic na: ", suggestion)
+<<<<<<< HEAD
             if(HARD_DEBUG):
                 print("Zamieniam slowo:", sentence[i])
                 print("Na:", suggestion)
@@ -203,6 +236,17 @@ def upgradeSentence(sentence: str) -> str:
 
             if(HARD_DEBUG):
                 print("Zamienione zdanie:", " ".join(sentence))
+=======
+            #if(HARD_DEBUG):
+                #print("Zamieniam slowo:", sentence[i])
+                #print("Na:", suggestion)
+                
+            #sentence[i] = suggestion
+            suggested_words[i] = suggestion
+
+            #if(HARD_DEBUG):
+            #    print("Zamienione zdanie:", " ".join(sentence))
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
             # print("CALKIEM PRAWDOPODOBNE", " ".join(new_sentence))
             #sentence[i] = suggestion
             added_suggestions += 1
@@ -226,4 +270,14 @@ def upgradeSentence(sentence: str) -> str:
                     print("Dostosowuje modyfikator",tokens_i_mod)
                     print("")
 
+<<<<<<< HEAD
+=======
+    sorted_new_words = sorted(suggested_words.items(), key=lambda x: x[0], reverse=True)
+
+    for index, word in sorted_new_words:
+        word = "("+word+"?)"
+        sentence.insert(index+1, word)
+
+    print(" ".join(sentence))
+>>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
     return " ".join(sentence)
