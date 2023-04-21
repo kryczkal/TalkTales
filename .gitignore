@@ -3,3 +3,4 @@
 data/*
 plots/*
 *__pycache__/
+src/suggestions/en-pl.txt/
