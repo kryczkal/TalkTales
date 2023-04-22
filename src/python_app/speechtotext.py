@@ -15,6 +15,7 @@ def stt(input: Queue, output: SimpleQueue) -> Tuple[str, float]:
         word = ''
         timestamp = 0.0
 
+        # debugging example
         word = sub('<\d>', '', packet[0]).strip()
         
         ... # processing

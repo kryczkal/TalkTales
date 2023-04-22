@@ -1,4 +1,4 @@
-from queue import Queue, SimpleQueue, Empty
+from queue import Queue, SimpleQueue
 from threading import Thread
 
 from ansicolors import color, reset
@@ -15,7 +15,6 @@ stt_data = SimpleQueue()
 voice_rec_data = SimpleQueue()
 
 if __name__ == '__main__':
-    # threading implementation
     audio_thread = Thread(target=produce_audio, args=([stt_audio, voice_rec_audio],), name='audio_producer', daemon=True)
     stt_thread = Thread(target=stt, args=(stt_audio, stt_data), name='stt', daemon=True)
     voice_rec_thread = Thread(target=voice_recognition, args=(voice_rec_audio, voice_rec_data), name='voice_rec', daemon=True)
@@ -26,7 +25,6 @@ if __name__ == '__main__':
     
     stt_packet = ('', 0.0)
     voice_rec_packet = None
-    speaker = 0
     # main loop
     while True:
         stt_packet = stt_data.get()
@@ -34,4 +32,5 @@ if __name__ == '__main__':
         
         if stt_packet:
             print(f'{color(voice_rec_packet + 2)}{stt_packet}{reset()}')
+        
         ... # do sth with the speaker id and currect word/sentence
