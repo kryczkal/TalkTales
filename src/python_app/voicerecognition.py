@@ -15,7 +15,7 @@ def voice_recognition(input: Queue, output: SimpleQueue) -> Tuple[int, float]:
     while True:
         packet = input.get() # get() waits until there's an item available by default
 
-        # example for debugging
+        # debugging example
         if search('(?<=^<)\d(?=>)', packet[0]):
             speaker = (int)(search('(?<=<)\d(?=>)', packet[0]).group())
         
