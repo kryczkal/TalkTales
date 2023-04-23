@@ -3,7 +3,7 @@ import numpy as np
 import time as t
 
 from Sample import Sample
-from settings import Settings
+from Settings import Settings
 
 from plots import plot_mfcc
 
@@ -13,12 +13,13 @@ stream = audio.open(format=Settings.FORMAT, channels=Settings.CHANNELS, rate=Set
 try:
     print("Recording audio... Press Ctrl+C to stop.")
     buffer = []
-    while True:
-        t.sleep(1)
-        data = Sample(np.frombuffer(stream.read(Settings.CHUNK_SIZE),np.dtype(int)))
-        print(data.data)
-        data.get_mfccs()
-        plot_mfcc(data)
+    
+    for i in range(500):
+        # if(Vad.is_speech(y)): continue
+        sample = Sample(np.frombuffer(stream.read(Settings.CHUNK_SIZE), dtype=np.float32))
+        sample.get_mfccs()
+        buffer.append(sample)
+        plot_mfcc(sample)
 
 except KeyboardInterrupt:
     print("Printing stopped")
