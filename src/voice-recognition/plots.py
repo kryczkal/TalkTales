@@ -6,4 +6,4 @@ def plot_mfcc(Sample):
     im = display.specshow(Sample.mfcc)
     # plt.colorbar(im)
     plt.title("Mel Coef")
-    plt.show()
+    # plt.show()
