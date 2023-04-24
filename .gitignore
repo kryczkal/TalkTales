@@ -4,3 +4,4 @@ data/*
 plots/*
 *__pycache__/
 src/suggestions/en-pl.txt/
+src/voice-recognition/read_with_vad.py
