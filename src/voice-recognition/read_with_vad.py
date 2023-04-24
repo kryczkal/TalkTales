@@ -9,7 +9,7 @@ from plots import plot_mfcc
 import matplotlib.pylab
 
 audio = pyaudio.PyAudio()
-stream = audio.open(format=Settings.FORMAT, channels=Settings.CHANNELS,
+stream = audio.open(format=Settings.STREAMFORMAT, channels=Settings.CHANNELS,
                     rate=Settings.FREQUENCY, input=True, frames_per_buffer=Settings.CHUNK_SIZE)
 
 try:
