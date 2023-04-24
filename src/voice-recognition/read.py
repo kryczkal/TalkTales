@@ -1,33 +1,53 @@
 import pyaudio
 import numpy as np
 import time as t
+import webrtcvad
 
 from Sample import Sample
+from VoiceRecog import *
 from Settings import Settings
 
 from plots import plot_mfcc
-import matplotlib.pylab
+import matplotlib.pyplot as plt
 
 audio = pyaudio.PyAudio()
-stream = audio.open(format=Settings.FORMAT, channels=Settings.CHANNELS, rate=Settings.FREQUENCY, input=True, frames_per_buffer=Settings.CHUNK_SIZE)
+stream = audio.open(format=Settings.STREAMFORMAT, channels=Settings.CHANNELS, rate=Settings.FREQUENCY, input=True, frames_per_buffer=Settings.CHUNK_SIZE)
+Vad = webrtcvad.Vad(1)
 
 try:
     print("Recording audio... Press Ctrl+C to stop.")
-    buffer = []
+    AudioBuffer = []
+    AnalyzeBuffer = []
+    Counter = 0
     
-    for i in range(100):
-        # if(Vad.is_speech(y)): continue
-        sample = Sample(np.frombuffer(stream.read(Settings.CHUNK_SIZE), dtype=np.float32))
-        sample.get_mfccs()
-        buffer.append(sample)
-    for i in range(100):
-        matplotlib.pylab.subplot(10,10,i+1)
-        plot_mfcc(buffer[i])
+    while True:
+        Data = stream.read(Settings.CHUNK_SIZE)
 
-    matplotlib.pylab.show()
+        Temp = Sample(Data,
+                        Vad.is_speech(Data, Settings.FREQUENCY), 
+                        Counter * Settings.SEGMENT_DURATION_MS)
+        
+        Counter += 1
+
+        AudioBuffer.append(Temp)
+
+        if Temp.IsSpeech:
+            AnalyzeBuffer.append(Temp)
+
 
 except KeyboardInterrupt:
-    print("Printing stopped")
+    print("Recording Stopped")
+
+    AnalyzeBuffer = CreateOverlappedData(AnalyzeBuffer)
+    ExtractInformation(AnalyzeBuffer)
+
+    for Num, Seg in enumerate(AnalyzeBuffer):
+        if Num < 5*7:
+            plt.subplot(5,7,Num)
+            plot_mfcc(Seg)
+
+    plt.show()
+
 finally:
     stream.stop_stream()
     stream.close()
