@@ -22,7 +22,6 @@ try:
     
     while True:
         Data = stream.read(Settings.CHUNK_SIZE)
-
         Temp = Sample(Data,
                         Vad.is_speech(Data, Settings.FREQUENCY), 
                         Counter * Settings.SEGMENT_DURATION_MS)
@@ -36,14 +35,14 @@ try:
 
 
 except KeyboardInterrupt:
-    print("Recording Stopped")
+    print("Recording stopped")
 
     AnalyzeBuffer = CreateOverlappedData(AnalyzeBuffer)
     ExtractInformation(AnalyzeBuffer)
 
     for Num, Seg in enumerate(AnalyzeBuffer):
         if Num < 5*7:
-            plt.subplot(5,7,Num)
+            plt.subplot(5,7,Num+1)
             plot_mfcc(Seg)
 
     plt.show()

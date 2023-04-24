@@ -1,9 +1,22 @@
+import numpy as np
+
 from Settings import Settings
 import numpy as np
 import librosa
 import librosa.feature
+import numpy
+
 
 class Sample:
+
+    def get_mfcc(self):
+        self.mel = librosa.feature.melspectrogram(y=self.data, sr=Settings.FREQUENCY)
+        self.mfcc = librosa.feature.mfcc(y=self.data, S=self.mel, sr=Settings.FREQUENCY, n_mfcc=13, fmin=100, fmax=8000, lifter=1)
+
+    def concatenate_data(self, s):
+        self.Data = numpy.concatenate((self.Data, s.Data), axis=None)
+        return self
+
 
     def __init__(self, ByteData, IsSpeech, TimeStamp):
         self.ByteData = ByteData
@@ -25,10 +38,10 @@ class Sample:
         # Compute Mfcc component
         self.Mfcc = librosa.feature.mfcc(y=self.Data, S=self.Mel, sr=Settings.FREQUENCY,
                                           n_mfcc=13, fmin=100, fmax=8000, lifter=1,
-                                          n_fft=len(self.Data), dtype=Settings.DATAFORMAT)
+                                          n_fft=len(self.Data))
 
     def ConvertData(self):
         # Convert data from raw byte string and extract necessary information
-        self.Data = np.frombuffer(self.ByteData, dtype=Settings.DATAFORMAT)
+        self.Data = np.frombuffer(self.ByteData, dtype=Settings.DATAFORMAT).astype(np.float32, order='C') / 32768.0
         # self.Mel = librosa.feature.melspectrogram(y=self.Data, sr=Settings.FREQUENCY, dtype=Settings.DATAFORMAT)
         # TODO Problem jest tutaj jakis
