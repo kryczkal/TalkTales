@@ -1,8 +1,9 @@
 import pyaudio
 import numpy as np
 import time as t
+from webrtcvad import Vad
 
-from sample import Sample
+from Sample import Sample
 from settings import Settings
 
 from plots import plot_mfcc
@@ -15,7 +16,9 @@ try:
     buffer = []
     while True:
         t.sleep(1)
-        data = Sample(np.frombuffer(stream.read(Settings.CHUNK_SIZE),np.dtype(int)))
+        y = np.frombuffer(stream.read(Settings.CHUNK_SIZE),np.dtype(int))
+        if(Vad.is_speech(y)): continue
+        data = Sample(y)
         data.get_mfccs()
         plot_mfcc(data)
 

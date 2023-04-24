@@ -42,6 +42,7 @@ class aud:
         self.freq_domain = -1
         self.fourier = -1
         self.mel = -1
+        self.mfcc = -1
 
     def __plot_name(self, name):
         if self.name != '':
@@ -177,6 +178,21 @@ class aud:
         plt.ylabel('Częstotliwość [Hz]')
         plt.xlabel('Czas [s]')
 
+    def calculate_mfcc(self) -> np.ndarray:
+        if type(self.mel) == int:
+            self.calc_mel()
+
+        self.mfcc = lib.feature.mfcc(y=self.data, sr=self.freq, S=self.mel, fmin = 100,
+                                     fmax = 8000, n_nfft=5, lifter=1, n_mfcc=13)
+        return self.mfcc
+    
+    def setup_mfcc_plot(self):
+        if type(self.mfcc) == int:
+            self.calculate_mfcc()
+
+        specshow(self.mfcc)
+        plt.title("Mel Coef")
+
 
     def split_to_freq_chunks(self, chunks: tuple):
         if type(chunks) != tuple and type(chunks != tuple):
@@ -223,6 +239,17 @@ class aud:
             return out[0]
 
         return out
+    
+    def split_to_windows(self, window: int = 20, overlap: int =  10) -> list:
+        window = int((window/1000)*self.freq)
+        shift = int((overlap/1000)*self.freq)
+
+        ret = []
+
+        for i in range(int(1000*self.duration/overlap)-1):
+            ret.append(aud(self.data[i*shift:i*shift + window] ,self.freq))
+
+        return ret
     
     def split_to_frame_chunks(self, chunks: tuple) -> list:
         ...
@@ -310,6 +337,10 @@ class aud:
         self.setup_mel_plot(freq_max)
         self.plot()
 
+    def plot_mfcc(self):
+        self.setup_mfcc_plot()
+        self.plot()
+
     def setup_all(self):
         plt.subplot(2,2,1)
         self.setup_def_plot()
@@ -327,6 +358,8 @@ class aud:
 def plot_aud_array(input: list[aud], plot_type='def', mult_windows = False):
     if plot_type == 'def':
         plocior = aud.setup_def_plot
+    elif plot_type == 'mfcc':
+        plocior = aud.setup_mfcc_plot
     elif plot_type == 'db':
         plocior = aud.setup_db_plot
     elif plot_type == 'fourier':
@@ -404,18 +437,19 @@ def save_aud_array(input: list[aud] , name_list: list[str]= [] , path: str = '')
 
 def read_from_mic(duration: float = 1000, freq: int = 44100, format = pyaud.paFloat32) -> aud:
     stream = pyaud.PyAudio()
-    chunk = int((duration * freq)/1000)
+    chunk = int(duration * freq/1000)
     stream = stream.open(format=format, channels=1, rate=freq, input=True, frames_per_buffer=chunk)
+    stream.close()
 
     return aud(np.frombuffer(stream.read(chunk), dtype=np.float32), freq)
 
 def standard_filter(arg: aud) -> aud:
     ret = deepcopy(arg)
-    ret = ret.split_to_freq_chunks((100,15000))
+    # ret = ret.split_to_freq_chunks((45,10000))
     ret = aud(lib.effects.preemphasis(ret.data, coef=0.97), ret.freq)
-    ret = ret.split_to_freq_chunks((100,15000))
+    # ret = ret.split_to_freq_chunks((45,15000))
     ret = aud(lib.util.normalize(ret.data), ret.freq)
-    data, _ = lib.effects.trim(ret.data, top_db=20)
-    ret = aud(data,ret.freq)
+    # data, _ = lib.effects.trim(ret.data, top_db=20)
+    # ret = aud(data,ret.freq)
     ret.name = arg.name
     return ret

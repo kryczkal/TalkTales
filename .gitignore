@@ -9,3 +9,4 @@ projects/*
 AudaCity/*
 *.xml
 JPEGS/*
+VoiceRecognition/__pycache__/*
