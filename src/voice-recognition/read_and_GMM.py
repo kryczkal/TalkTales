@@ -13,11 +13,13 @@ import matplotlib.pyplot as plt
 audio = pyaudio.PyAudio()
 stream = audio.open(format=Settings.STREAMFORMAT, channels=Settings.CHANNELS, rate=Settings.FREQUENCY, input=True, frames_per_buffer=Settings.CHUNK_SIZE)
 Vad = webrtcvad.Vad(1)
-
+stream.stop_stream()
 recognizer = RecognizerGMM()
+
 
 def recognize(data):
     print(recognizer.predict(data))
+
 
 def add_speaker(name):
     try:
@@ -25,7 +27,7 @@ def add_speaker(name):
         AudioBuffer = []
         AnalyzeBuffer = []
         Counter = 0
-
+        stream.start_stream()
         while True:
             Data = stream.read(Settings.CHUNK_SIZE)
             Temp = Sample(Data,
@@ -41,6 +43,7 @@ def add_speaker(name):
 
 
     except KeyboardInterrupt:
+        stream.stop_stream()
         print("Recording stopped")
 
         AnalyzeBuffer = CreateOverlappedData(AnalyzeBuffer)
@@ -57,7 +60,7 @@ def analyze():
         AudioBuffer = []
         AnalyzeBuffer = []
         Counter = 0
-
+        stream.start_stream()
         while True:
             Data = stream.read(Settings.CHUNK_SIZE)
             Temp = Sample(Data,
@@ -73,6 +76,7 @@ def analyze():
 
 
     except KeyboardInterrupt:
+        stream.stop_stream()
         print("Recording stopped")
 
         AnalyzeBuffer = CreateOverlappedData(AnalyzeBuffer)
@@ -92,20 +96,18 @@ def analyze():
 
 
 if __name__ == "__main__":
-    print("1st speaker name:")
-    name1 = input()
-    add_speaker(name1)
-    print("2nd speaker name:")
-    name2 = input()
-    add_speaker(name2)
-    while True:
-        try:
-            print("press enter to continue")
-            input()
-            analyze()
-        except(KeyboardInterrupt):
-            stream.stop_stream()
-            stream.close()
-            audio.terminate()
-             continue
-
+    try:
+        while True:
+            print("click ctrl+C to finish the program")
+            print("Do you wish to add another speaker? y/n")
+            option = input()
+            if option == 'y':
+                print("speaker name?")
+                name = input()
+                add_speaker(name=name)
+            else:
+                analyze()
+    except  KeyboardInterrupt:
+        stream.stop_stream()
+        stream.close()
+        print("Program ended")
