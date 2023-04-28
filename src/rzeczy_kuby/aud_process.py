@@ -370,7 +370,7 @@ def save_plot_aud_array(input: list[aud], plot_type='def', mult_windows = False)
         plocior = aud.setup_spect_plot
     elif plot_type == 'all':
         plocior = aud.setup_all
-    else:
+    else:38f3d8e
         raise Exception("Jedyne dostepne opcje: def, db, fourier, spect, all")
     
     if mult_windows == False:
