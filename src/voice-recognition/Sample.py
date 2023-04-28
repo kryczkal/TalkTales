@@ -9,15 +9,6 @@ import numpy
 
 class Sample:
 
-    def get_mfcc(self):
-        self.mel = librosa.feature.melspectrogram(y=self.data, sr=Settings.FREQUENCY)
-        self.mfcc = librosa.feature.mfcc(y=self.data, S=self.mel, sr=Settings.FREQUENCY, n_mfcc=13, fmin=100, fmax=8000, lifter=1)
-
-    def concatenate_data(self, s):
-        self.Data = numpy.concatenate((self.Data, s.Data), axis=None)
-        return self
-
-
     def __init__(self, ByteData, IsSpeech, TimeStamp):
         self.ByteData = ByteData
         self.IsSpeech = IsSpeech
@@ -25,23 +16,40 @@ class Sample:
         self.Data = None
         self.Mfcc = None
         self.Mel = None
+        self.Spect = None
 
     def __is_empty(self) -> bool:
         # Checks if there is lack of some data
         return self.Data is None or self.Mel is None
+    
+    def NormalizeMfcc(self):
+        # Apllays process of nomalization on the Mfcc vector
+
+        self.Mfcc = self.Mfcc.mean(axis=1)
+        self.Mfcc = np.array_split(self.Mfcc, self.Mfcc.size)
+
 
     def GetMfcc(self):
         # Compute elements if needed
-        if self.__is_empty():
+        if self.Data is None:
             self.ConvertData()
 
-        # Compute Mfcc component
-        self.Mfcc = librosa.feature.mfcc(y=self.Data, S=self.Mel, sr=Settings.FREQUENCY,
-                                          n_mfcc=13, fmin=100, fmax=8000, lifter=1,
-                                          n_fft=len(self.Data))
+        test = True
+
+        if test:
+            self.Data = librosa.effects.preemphasis(self.Data)
+
+        # Compute Mfcc component,
+        self.Mfcc = librosa.feature.mfcc(y=self.Data, sr=Settings.FREQUENCY, window='hamming',
+                                          n_mfcc=13, lifter=0, 
+                                          n_fft=len(self.Data), htk=False, dct_type=2)
+        
+        self.NormalizeMfcc()
+        
+
+
 
     def ConvertData(self):
         # Convert data from raw byte string and extract necessary information
-        self.Data = np.frombuffer(self.ByteData, dtype=Settings.DATAFORMAT).astype(np.float32, order='C') / 32768.0
-        # self.Mel = librosa.feature.melspectrogram(y=self.Data, sr=Settings.FREQUENCY, dtype=Settings.DATAFORMAT)
-        # TODO Problem jest tutaj jakis
+        self.Data = np.frombuffer(self.ByteData, dtype=Settings.DATAFORMAT)
+        self.Data = librosa.util.buf_to_float(self.Data)
