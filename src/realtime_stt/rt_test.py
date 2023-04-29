@@ -32,6 +32,9 @@ def main():
         
     # Load / Download model
     model = ARGS['model']
+    # Allow loading english-only models
+    if ARGS['language'] == 'en':
+        model += '.en'
     # Use downloaded model if it already exists, useful for offline development
     if path.exists(path.expanduser(f'~/.cache/whisper/{model}.pt')):
         model = path.expanduser(f'~/.cache/whisper/{model}.pt')
