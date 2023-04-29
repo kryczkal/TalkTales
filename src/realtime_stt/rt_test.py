@@ -1,17 +1,15 @@
-#import argparse
 import io
 import os
 import speech_recognition as sr
 import whisper_timestamped as whisper
 import torch
 
+from os import path
 from json import load
 from datetime import datetime, timedelta
 from queue import Queue
 from tempfile import NamedTemporaryFile
 from time import sleep
-# from sys import platform
-
 
 def main():
     # model_choices=["tiny", "base", "small", "medium", "large"])
@@ -29,26 +27,14 @@ def main():
     recorder.energy_threshold = ARGS['energy_threshold']
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramtically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
-    
-    # Important for linux users. 
-    # # Prevents permanent application hang and crash by using the wrong Microphone
-    # if 'linux' in platform:
-    #     mic_name = args.default_microphone
-    #     if not mic_name or mic_name == 'list':
-    #         print("Available microphone devices are: ")
-    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
-    #             print(f"Microphone with name \"{name}\" found")   
-    #         return
-    #     else:
-    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
-    #             if mic_name in name:
-    #                 source = sr.Microphone(sample_rate=16000, device_index=index)
-    #                 break
-    # else:
+
     source = sr.Microphone(sample_rate=ARGS['frequency'])
         
     # Load / Download model
     model = ARGS['model']
+    # Use downloaded model if it already exists, useful for offline development
+    if path.exists(path.expanduser(f'~/.cache/whisper/{model}.pt')):
+        model = path.expanduser(f'~/.cache/whisper/{model}.pt')
     audio_model = whisper.load_model(model)
 
     record_timeout = ARGS['record_timeout']
