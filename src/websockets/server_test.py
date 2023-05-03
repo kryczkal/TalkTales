@@ -1,11 +1,15 @@
 import asyncio
 from websockets.server import serve
+from websockets.exceptions import ConnectionClosedOK
 
 
 async def echo(websocket):
     async for message in websocket:
         print(len(message))
-        await websocket.send(':D')
+        try:
+            await websocket.send(':D')
+        except ConnectionClosedOK:
+            print('Connection closed')
 
 
 async def main():

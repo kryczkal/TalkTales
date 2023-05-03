@@ -12,7 +12,6 @@ socketManager = function() {
   // Public variables and methods
   return {
     start: function() {
-      console.log('start');
       let serverIP = document.getElementById('ip').value;
       let serverPort = document.getElementById('port').value;
       let url = 'ws://' + serverIP + ':' + serverPort;
