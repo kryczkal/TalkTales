@@ -19,12 +19,10 @@ class Recognizer:
         self.divergances.append(divergance)
         if len(self.divergances) < 2:
             return divergance, 0
-        locmax = self.divergances[-2]
-        print(str(locmax))
-        if locmax - self.divergances[-1] > 20 and locmax - self.divergances[-3] > 20:
+        if self.divergances[-1] - self.divergances[-2] > 0.40*self.divergances[-2] and self.divergances[-1] > 30:
             self.add()
-            self.current_speaker = Speaker(max_id)
-            max_id+=1
+            self.current_speaker = Speaker(self.max_id)
+            self.max_id+=1
             self.divergances.clear()
             return divergance, 1
 
