@@ -1,5 +1,4 @@
 from sklearn.mixture import GaussianMixture
-from pycave.bayes import GaussianMixture as pyCaveMixture
 
 class Gmm:
     def __init__(self):
@@ -12,7 +11,7 @@ class Gmm:
         return self.model
 
 
-def gmm_kl(gmm_p, gmm_q, n_samples=10 ** 2):
+def gmm_kl(gmm_p, gmm_q, n_samples=10 ** 3):
     X, _ = gmm_p.sample(n_samples)
     log_p_X = gmm_p.score_samples(X)
     log_q_X = gmm_q.score_samples(X)
