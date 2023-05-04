@@ -1,0 +1,5 @@
+librosa
+numpy
+pyaudio
+matplotlib
+webrtcvad
