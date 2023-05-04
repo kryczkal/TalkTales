@@ -1,43 +1,36 @@
 import numpy as np
-
-from Settings import Settings
-import numpy as np
 import librosa
 import librosa.feature
-import numpy
+import webrtcvad
 
+from Settings import Settings
+Vad = webrtcvad.Vad(1)
 
-class Sample:
-    def concatenate_data(self, s):
-        self.Data = numpy.concatenate((self.Data, s.Data), axis=None)
-        return self
+class VoiceSample:
+    def __init__(self, byte_data, is_speech, time_stamp):
+        self.byte_data = byte_data
+        self.time_stamp = time_stamp
+        self.is_speech = is_speech
+        self.data = None
+        self.mfcc = None
+        self.mel = None
 
-
-    def __init__(self, ByteData, IsSpeech, TimeStamp):
-        self.ByteData = ByteData
-        self.IsSpeech = IsSpeech
-        self.TimeStamp = TimeStamp
-        self.Data = None
-        self.Mfcc = None
-        self.Mel = None
 
     def __is_empty(self) -> bool:
         # Checks if there is lack of some data
-        return self.Data is None or self.Mel is None
-
-    def GetMfcc(self):
+        return self.data is None or self.mel is None
+    
+    def mfcc_get(self):
         # Compute elements if needed
         if self.__is_empty():
-            self.ConvertData()
+            self.data_convert()
 
         # Compute Mfcc component
-        self.Mfcc = librosa.feature.mfcc(y=self.Data, S=self.Mel, sr=Settings.FREQUENCY,
+        self.mfcc = librosa.feature.mfcc(y=self.data, S=self.mel, sr=Settings.FREQUENCY,
                                           n_mfcc=13, fmin=100, fmax=8000, lifter=1,
-                                          n_fft=len(self.Data))
-        return self.Mfcc
-
-    def ConvertData(self):
+                                          n_fft=len(self.data))
+        return self.mfcc
+    
+    def data_convert(self):
         # Convert data from raw byte string and extract necessary information
-        self.Data = np.frombuffer(self.ByteData, dtype=Settings.DATAFORMAT).astype(np.float32, order='C') / 32768.0
-        # self.Mel = librosa.feature.melspectrogram(y=self.Data, sr=Settings.FREQUENCY, dtype=Settings.DATAFORMAT)
-        # TODO Problem jest tutaj jakis
+        self.data = np.frombuffer(self.byte_data, dtype=Settings.DATAFORMAT).astype(np.float32, order='C') / 32768.0

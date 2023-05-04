@@ -5,73 +5,74 @@ import numpy as np
 import time as t
 import webrtcvad
 
-from Sample import Sample
+from Sample import VoiceSample
 from VoiceRecog import *
 from Settings import Settings
 
 from plots import plot_mfcc
 import matplotlib.pyplot as plt
-from Gmm import Gmm, gmm_kl
+from Speaker import Speaker, kl_distance
+from Recognizer import Recognizer
 
 audio = pyaudio.PyAudio()
 stream = audio.open(format=Settings.STREAMFORMAT, channels=Settings.CHANNELS, rate=Settings.FREQUENCY, input=True, frames_per_buffer=Settings.CHUNK_SIZE)
 Vad = webrtcvad.Vad(1)
 
-speaker_gmm = Gmm()
-hypothetical_gmm = Gmm()
-hypothetical_gmm2 = Gmm()
-analyze_buffer = []
+Recognizer = Recognizer()
+
 once = True
 it = 300
+analyze_counter = 0
+
+all_divergances = []
 divergances = []
-divergances2 = []
-#stop = 1
+max_id = 1
+
 try:
     print("Recording audio... Press Ctrl+C to stop.")
 
     counter = 0
-    analyze_counter = 1
 
     while True:
-        Data = stream.read(Settings.CHUNK_SIZE)
-        Temp = Sample(Data,
-                      Vad.is_speech(Data, Settings.FREQUENCY),
-                      counter * Settings.SEGMENT_DURATION_MS)
-
+        byte_data = stream.read(Settings.CHUNK_SIZE)
+        sample = VoiceSample(byte_data,
+                            Vad.is_speech(byte_data, Settings.FREQUENCY),
+                            counter * Settings.SEGMENT_DURATION_MS)
         counter += 1
 
         if once:
-            mfcc_buffer = Temp.GetMfcc().T
+            mfcc_buffer = sample.mfcc_get().T
             once = False
-
-        if counter < 600 and Temp.IsSpeech:
-            np.append(mfcc_buffer, Temp.GetMfcc().T, axis=0)   
-            continue         
             
-        if Temp.IsSpeech:
-            analyze_buffer.append(Temp)
-            mfcc_buffer = np.append(mfcc_buffer, Temp.GetMfcc().T, axis=0)
+        if sample.is_speech:
+            mfcc_buffer = np.append(mfcc_buffer, sample.mfcc_get().T, axis=0)
 
             analyze_counter += 1
             if analyze_counter % it != 0:
                 continue
 
-            speaker_gmm.train(mfcc_buffer)
-            hypothetical_gmm.train(mfcc_buffer[-it:])
-            hypothetical_gmm2.train(mfcc_buffer[-it*2:-it])
-
-            divergence = gmm_kl(speaker_gmm.getModel(), hypothetical_gmm.getModel())
-            divergence2 = gmm_kl(hypothetical_gmm2.getModel(), hypothetical_gmm.getModel())
+            Recognizer.current_speaker.model_train(mfcc_buffer)
+            Recognizer.hypothetical_speaker.model_train(mfcc_buffer[-it:])
+            divergence, did_change = Recognizer.compare()
             print("KL divergence = ", divergence)
-            divergances.append(divergence)
-            divergances2.append(divergance2)
+            Recognizer.divergances.append(divergence)
+            all_divergances.append(divergence)
+
+            if analyze_counter < 3*it:
+                continue
+
+            
+            if did_change:
+                print("Speaker changed!!")
+                max_id+=1
+                once = False
+                analyze_counter = 0
+            Recognizer.current_speaker.model_train(mfcc_buffer)
+            
             #exit()
-
-
 except KeyboardInterrupt:
     print("Recording stopped")
-    plt.plot(divergances)
-    plt.plot(divergances2)
+    plt.plot(all_divergances)
     plt.show()
 
 finally:
