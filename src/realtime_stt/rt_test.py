@@ -25,7 +25,7 @@ def main():
     # from the threaded recording callback.
     data_queue = Queue()
     # We use SpeechRecognizer to record our audio because
-    # it has a nice feauture where it can detect when speech ends.1
+    # it has a nice feauture where it can detect when speech ends.
     recorder = sr.Recognizer()
     recorder.energy_threshold = ARGS['energy_threshold']
     # Definitely do this, dynamic energy compensation
@@ -36,7 +36,7 @@ def main():
     source = sr.Microphone(sample_rate=ARGS['frequency'])
     # Load / Download model
     model = ARGS['model']
-    # Allow loading english-only models
+    # Allow loading englishimage.png-only models
     if ARGS['language'] == 'en':
         model += '.en'
 
@@ -76,8 +76,8 @@ def main():
 
     # Cue the user that we're ready to go.
     print("Model loaded.\n")
-    transcription_start = datetime.utcnow()  # noqa: F841
-
+    transcription_start = datetime.utcnow()
+    phrase_start = datetime.utcnow()
     while True:
         try:
             now = datetime.utcnow()
@@ -89,9 +89,9 @@ def main():
                 # working audio buffer to start over with the new data.
                 if (phrase_time and now - phrase_time
                         > timedelta(seconds=phrase_timeout)):
-
                     last_sample = bytes()
                     phrase_complete = True
+                    phrase_start = datetime.utcnow()
                 # This is the last time we received
                 # new audio data from the queue.
                 phrase_time = now
@@ -113,10 +113,20 @@ def main():
                     f.write(wav_data.read())
 
                 # Read the transcription.
-                result = audio_model.transcribe(temp_file,
-                                                fp16=torch.cuda.is_available(),
-                                                language=ARGS['language'])
-                text = result['text'].strip()
+                result = whisper.transcribe(audio_model, temp_file,
+                                            fp16=torch.cuda.is_available(),
+                                            language=ARGS['language'])
+                # text = result['text'].strip()
+                # prototyp timestamp
+                if result['segments']:
+                    text = ''
+                    for i in result['segments']:
+                        for j in i['words']:
+                            diff = phrase_start + timedelta(seconds=j['start'])
+                            diff -= transcription_start
+                            text += f'<{diff.seconds}.'
+                            text += f'{round(diff.microseconds, 2)}> '
+                            text += j['text'].strip() + ' '
 
                 # If we detected a pause between recordings,
                 # add a new item to our transcripion.
