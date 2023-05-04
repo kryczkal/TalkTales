@@ -1,4 +1,4 @@
-from Sample import Sample
+from Sample import VoiceSample
 from librosa import display
 import matplotlib.pyplot as plt
 

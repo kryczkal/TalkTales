@@ -5,21 +5,21 @@ import numpy as np
 import time as t
 import webrtcvad
 
-from Sample import Sample
+from Sample import VoiceSample
 from VoiceRecog import *
 from Settings import Settings
 
 from plots import plot_mfcc
 import matplotlib.pyplot as plt
-from Gmm import Gmm, gmm_kl
+from Gmm import Speaker, kl_distance
 # from queue import Queue
 
 audio = pyaudio.PyAudio()
 stream = audio.open(format=Settings.STREAMFORMAT, channels=Settings.CHANNELS, rate=Settings.FREQUENCY, input=True, frames_per_buffer=Settings.CHUNK_SIZE)
 Vad = webrtcvad.Vad(1)
 
-speaker_gmm = Gmm()
-hypothetical_gmm = Gmm()
+speaker_gmm = Speaker()
+hypothetical_gmm = Speaker()
 analyze_buffer = []
 once = True
 it = 200
@@ -30,23 +30,23 @@ try:
     counter = 0
     analyze_counter = 0
     while True:
-        Data = stream.read(Settings.CHUNK_SIZE)
-        Temp = Sample(Data,
-                      Vad.is_speech(Data, Settings.FREQUENCY),
+        byte_data = stream.read(Settings.CHUNK_SIZE)
+        Temp = VoiceSample(byte_data,
+                      Vad.is_speech(byte_data, Settings.FREQUENCY),
                       counter * Settings.SEGMENT_DURATION_MS)
 
         counter += 1
 
         if once:
-            mfcc_buffer = Temp.GetMfcc().T
+            mfcc_buffer = Temp.mfcc_get().T
             once = False
 
-        if Temp.IsSpeech:
+        if Temp.is_speech:
             analyze_buffer.append(Temp)
             #mfcc_buffer = np.vstack((mfcc_buffer, Temp.GetMfcc().T))
             #print("dodajemy:")
             #print(Temp.GetMfcc().T)
-            mfcc_buffer = np.append(mfcc_buffer, Temp.GetMfcc().T, axis=0)
+            mfcc_buffer = np.append(mfcc_buffer, Temp.mfcc_get().T, axis=0)
             #print("nowa konkatanacja")
             #print(mfcc_buffer)
             #if stop % 3 == 0:
@@ -56,13 +56,13 @@ try:
             if analyze_counter % it != 0:
                 continue
 
-            speaker_gmm.train(mfcc_buffer)
+            speaker_gmm.model_train(mfcc_buffer)
             #print(mfcc_buffer.shape)
             #print("ostatnie", it)
             #print(mfcc_buffer[-it:].shape)
-            hypothetical_gmm.train(mfcc_buffer[-it:])
+            hypothetical_gmm.model_train(mfcc_buffer[-it:])
 
-            divergence = gmm_kl(speaker_gmm.getModel(), hypothetical_gmm.getModel())
+            divergence = kl_distance(speaker_gmm.model_get(), hypothetical_gmm.model_get())
             print("KL divergence = ", divergence)
 
             #exit()
