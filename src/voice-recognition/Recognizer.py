@@ -1,4 +1,4 @@
-from Speaker import Speaker, kl_distance
+from Speaker import Speaker, kl_distance_global, kl_distance_local
 
 class Recognizer:
     """
@@ -30,7 +30,7 @@ class Recognizer:
         # TODO for gmm in self.speakers:
         self.speakers.append(self.current_speaker)
 
-    def compare(self):
+    def compare_global(self):
         """
         Computes the KL divergence between the current speaker instance and hypothetical speaker instance.
         If the difference in KL divergence is greater than a threshold, and the final KL divergence score is above a certain threshold value, then the current_speaker is added to the speakers list and assigned the next available Speaker id. 
@@ -43,8 +43,8 @@ class Recognizer:
                         1: New Speaker instance was added.
         """
 
-        divergance = kl_distance(self.current_speaker.model_get(), self.hypothetical_speaker.model_get())
-        print(f"divergance: {divergance}")
+        divergance = kl_distance_global(self.current_speaker.model, self.hypothetical_speaker.model)
+        #print(f"divergance: {divergance}")
         
         self.divergances.append(divergance)
         if len(self.divergances) < 2:
@@ -56,4 +56,32 @@ class Recognizer:
             self.divergances.clear()
             return divergance, 1
 
+        return divergance, 0
+    
+    def compare_local(self, samples):
+        """
+        Computes the KL divergence between the current speaker instance and hypothetical speaker instance on provided samples.
+        If the difference in KL divergence is greater than a threshold, and the final KL divergence score is above a certain threshold value, then the current_speaker is added to the speakers list and assigned the next available Speaker id. 
+        This method returns the KL divergence value computed and a flag indicating whether or not a new Speaker instance was added to the speaker list.
+        
+        Returns:
+            divergance (float): KL divergence value computed.
+            flag (int): Indicates whether or not a new Speaker instance was added to the list of speakers.
+                        0: No new Speaker instance was added.
+                        1: New Speaker instance was added.
+        """
+
+        divergance = kl_distance_local(self.current_speaker.model, self.hypothetical_speaker.model, samples)
+        #print(f"divergance: {divergance}")
+        
+        #self.divergances.append(divergance)
+        #if len(self.divergances) < 2:
+        #    return divergance, 0
+        #if abs(self.divergances[-1] - self.divergances[-2]) > abs(0.35*self.divergances[-2]) and abs(self.divergances[-1]) > 400:
+        #    self.add()
+        #    self.current_speaker = Speaker(self.max_id)
+        #    self.max_id+=1
+        #    self.divergances.clear()
+        #    return divergance, 1
+#
         return divergance, 0

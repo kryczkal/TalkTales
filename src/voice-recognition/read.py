@@ -12,7 +12,7 @@ from Settings import Settings
 
 from plots import plot_mfcc
 import matplotlib.pyplot as plt
-from Speaker import Speaker, kl_distance
+from Speaker import Speaker, kl_distance_global
 from Recognizer import Recognizer
 
 # The code imports necessary libraries and files such as pyaudio, webrtcvad, numpy, Sample, VoiceRecog, Settings, plots, Speaker, and Recognizer. 
@@ -28,7 +28,9 @@ from Recognizer import Recognizer
 # during the conversation.
 # When the recording has finished, the pyaudio stream is stopped and closed.
 
-
+# Experimental:
+# Currently testing how does the KL distance metric change, when done on the last "it" (num of iterations) MFCC's 
+# instead of n randomly generated samples from one distribution
 
 audio = pyaudio.PyAudio()
 vad = webrtcvad.Vad(1)
@@ -68,9 +70,10 @@ once = True
 it = 300
 analyze_counter = 0
 
-all_divergances = []
-divergances = []
-speaker_change_timestamps = []
+divergances_global = []
+divergances_local = []
+speaker_change_timestamps_global = []
+speaker_change_timestamps_local = []
 max_id = 1
 
 try:
@@ -104,10 +107,19 @@ try:
             recognizer.hypothetical_speaker.model_train(mfcc_buffer[-it:])
             recognizer.current_speaker.model_train(mfcc_buffer)
 
-            divergence, did_change = recognizer.compare()
-            recognizer.divergances.append(divergence)
-            all_divergances.append(divergence)
-            print("KL divergence = ", divergence)
+            divergence_local, _ = recognizer.compare_local(mfcc_buffer[-it:])
+            divergence_global, did_change = recognizer.compare_global()
+            # lokalny musi być przed globalnym, bo globalny niejawnie zmienia current speaker 
+            # (co daje pustego speakera do local compae)
+            
+            
+            recognizer.divergances.append(divergence_global)
+
+            divergances_global.append( (np.floor(counter/100),divergence_global) )
+            divergances_local.append( (np.floor(counter/100),divergence_local) )
+
+            print("KL global divergence = ", divergence_global)
+            print("KL local divergence = ", divergence_local)
             
             if analyze_counter < 2*it:
                 continue
@@ -115,7 +127,8 @@ try:
             if did_change:
                 print("Speaker changed!!")
 
-                speaker_change_timestamps.append( (np.floor(counter/100), divergence) )
+                speaker_change_timestamps_global.append( (np.floor(counter/100), divergence_global) )
+                speaker_change_timestamps_local.append( (np.floor(counter/100), divergence_local) )
                 recognizer.current_speaker.model_train(mfcc_buffer[-it:])
                 max_id+=1
                 once = True
@@ -128,12 +141,16 @@ except KeyboardInterrupt:
 
 finally:
     print("Recording stopped")
-    domain = np.linspace(1, len(all_divergances), len(all_divergances))
-    domain *= it / 100
-    
-    plt.plot(domain, all_divergances)
-    plt.scatter( [stamp[0] for stamp in speaker_change_timestamps], [stamp[1] for stamp in speaker_change_timestamps], marker = 'x', color='r')
+
+    plt.subplot(1,2,1)
+    plt.plot([stamp[0] for stamp in divergances_global], [stamp[1] for stamp in divergances_global])
+    plt.scatter( [stamp[0] for stamp in speaker_change_timestamps_global], [stamp[1] for stamp in speaker_change_timestamps_global], marker = 'x', color='r')
     # i want a plot that is displayed on top of another plot, and has a big 'X' mark of red color
+
+    plt.subplot(1,2,2)
+    plt.plot([stamp[0] for stamp in divergances_local], [stamp[1] for stamp in divergances_local])
+    plt.scatter( [stamp[0] for stamp in speaker_change_timestamps_local], [stamp[1] for stamp in speaker_change_timestamps_local], marker = 'x', color='r')
+
     plt.show()
     if not READ_FROM_FILE:
         stream.stop_stream()
