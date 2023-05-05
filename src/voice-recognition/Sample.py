@@ -6,13 +6,13 @@ from Settings import Settings
 
 class VoiceSample:
     """
-    Class used to represent a single audio sample. Contains raw byte data, converted data,
+    Class used to represent a single audio sample. Contains raw byte data, converted data, \n
     timestapt of creation of the object and methods to calculate mfcc of the sample.
     """
     def __init__(self, byte_data, is_speech, time_stamp):
         """
         Initializes VoiceSample class with byte formatted audio data,
-        is_speech flag indicating where audio has speech or not, and
+        is_speech flag indicating where audio has speech or not, and 
         timestamp of the object.
         """
         self.byte_data = byte_data
