@@ -34,12 +34,12 @@ def main():
     recorder.dynamic_energy_threshold = False
 
     source = sr.Microphone(sample_rate=ARGS['frequency'])
+
     # Load / Download model
     model = ARGS['model']
     # Allow loading englishimage.png-only models
     if ARGS['language'] == 'en':
         model += '.en'
-
     # If model fails to be fetched (e.g. the machine is offline),
     # look for it on disk
     try:

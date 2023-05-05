@@ -2,15 +2,10 @@ import pyaudio
 import numpy
 
 class Settings:
-
-    STREAMFORMAT = pyaudio.paInt16  # Audio format (32-bit floats)
-    DATAFORMAT = numpy.int16
-    STREAMFORMAT = pyaudio.paInt16 
-    DATAFORMAT = numpy.int16
+    STREAMFORMAT = pyaudio.paFloat32
+    DATAFORMAT = numpy.float32
     CHANNELS = 1  # Mono
     FREQUENCY = 48000  # Sampling rate (44.1kHz)
-    SEGMENT_DURATION_MS = 10  # Segment duration in milliseconds
-    FREQUENCY = 48000  
-    SEGMENT_DURATION_MS = 10  # Segment duration in milliseconds
+    SEGMENT_DURATION_MS = 100  # Segment duration in milliseconds
     frames_per_segment = int(FREQUENCY * SEGMENT_DURATION_MS / 1000)
     CHUNK_SIZE = frames_per_segment  # Size of each audio chunk
