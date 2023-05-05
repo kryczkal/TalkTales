@@ -1,5 +1,5 @@
 {
-    "model": "medium",
+    "model": "base",
     "frequency": 48000,
     "energy_threshold": 1000,
     "record_timeout": 2,
