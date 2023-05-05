@@ -66,7 +66,7 @@ try:
         sample = VoiceSample(byte_data,
                             Vad.is_speech(byte_data, Settings.FREQUENCY),
                             counter * Settings.SEGMENT_DURATION_MS)
-        counter += 1
+        
 
         if once:
             mfcc_buffer = sample.mfcc_get().T
@@ -76,6 +76,8 @@ try:
             mfcc_buffer = np.append(mfcc_buffer, sample.mfcc_get().T, axis=0)
 
             analyze_counter += 1
+            counter += 1
+
             if analyze_counter % it != 0:
                 continue
 
@@ -91,12 +93,11 @@ try:
             
             if did_change:
                 print("Speaker changed!!")
-                speaker_change_timestamps.append(np.floor(counter/300))
+                speaker_change_timestamps.append( (np.floor(counter/100), divergence) )
                 max_id+=1
                 once = True
                 analyze_counter = 0
                 Recognizer.current_speaker.model_train(mfcc_buffer[-it:])
-
             
             #exit()
 except KeyboardInterrupt:
@@ -108,9 +109,10 @@ finally:
     domain *= it / 100
     
     plt.plot(domain, all_divergances)
-    plt.plot(speaker_change_timestamps, np.ones((1,len(speaker_change_timestamps)))*100, marker='x')
-    
+    plt.scatter( [stamp[0] for stamp in speaker_change_timestamps], [stamp[1] for stamp in speaker_change_timestamps], marker = 'x', color='r')
+    # i want a plot that is displayed on top of another plot, and has a big 'X' mark of red color
     plt.show()
-    stream.stop_stream()
-    stream.close()
+    if not READ_FROM_FILE:
+        stream.stop_stream()
+        stream.close()
     audio.terminate()
