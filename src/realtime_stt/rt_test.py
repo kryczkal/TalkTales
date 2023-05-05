@@ -118,8 +118,8 @@ def main():
                                             language=ARGS['language'])
                 # text = result['text'].strip()
                 # prototyp timestamp
+                text = ''
                 if result['segments']:
-                    text = ''
                     for i in result['segments']:
                         for j in i['words']:
                             diff = phrase_start + timedelta(seconds=j['start'])
