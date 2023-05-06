@@ -20,7 +20,7 @@ class Speaker:
     def model_train(self, data):
         """Trains speaker GMM model using provided data"""
         if (data.shape[0] > Settings.GMM_IS_TRAINED_DATA_TRESHOLD):
-            self.is_trained = True
+            #self.is_trained = True
             return
         self.model.fit(data)
     

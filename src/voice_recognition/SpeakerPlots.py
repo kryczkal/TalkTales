@@ -1,27 +1,31 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from math import ceil, sqrt
-
+import itertools
 from Speaker import Speaker
 class SpeakerPlots:
     def __init__(self) -> None:
-        self.plots = []
+        self.plots = {}
         self.n_speakers = 0
 
-    def add_plot(self, id, speaker_data):
-        self.n_speakers +=1
-        self.plots.append( (id, speaker_data) )
+    def add_to_plot(self, id, x, y):
+        if id not in self.plots:
+            self.plots[id] = []
+            self.n_speakers +=1
+        self.plots[id].append( (x, y) )
     
     def plot(self):
         n_rows = int(sqrt(self.n_speakers))
         n_cols = ceil(self.n_speakers / n_rows)
-
-        fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
-        for i in range(self.n_speakers):
-            row = i // n_cols
-            col = i % n_cols
-            ax = axs[row, col]
-            ax.plot([0, 1], [0, 1])
-            ax.set_title(f"Speaker {i+1}"
-        fig.tight_layout()
+        
+        for plot_id in self.plots:
+            plt.subplot(n_rows, n_cols, plot_id+1)
+            plt.plot( [value[0] for value in self.plots[plot_id] ], [value[1] for value in self.plots[plot_id]] )
+            plt.title(f"Speaker {plot_id}")
+            
+        # plt.ylim = (5, 70)
+        # plt.figure(figsize=(20,12))
+        
+        plt.tight_layout()
         plt.show()
+        plt.close()
