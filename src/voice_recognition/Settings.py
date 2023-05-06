@@ -15,6 +15,7 @@ class Settings:
     NUMBER_TRESHOLD = 30 # 0
     PERCENTAGE_TRESHOLD = 0.35
     MAKE_PLOTS = True 
+    RECOGNIZER_LOG_SPEAKER_CHANGE = True
 
     # Test Settings
-    N_OF_RECOGNIZERS = 1
+    N_OF_RECOGNIZERS = 3

@@ -56,7 +56,7 @@ if READ_FROM_FILE:
     with open(filename, 'rb') as wav:
         header = wav.read(100)
         byte_data = True
-        num_chunks = filesize // Settings.CHUNK_SIZE
+        num_chunks = filesize // Settings.CHUNK_SIZE / 4
         wav_data = wav.read()
 
 else:   
@@ -76,12 +76,19 @@ try:
                 if READ_FROM_FILE:
                     byte_data=wav_data[byte_counter*4*Settings.CHUNK_SIZE:(byte_counter+1)*4*Settings.CHUNK_SIZE]
                     byte_counter += 1
+                    if len(byte_data) < 4*Settings.CHUNK_SIZE:
+                        byte_data = False
+                        break
                     pbar.update(1)
                 else:
                     byte_data = stream.read(Settings.CHUNK_SIZE)
 
                 sample = VoiceSample(byte_data)
-                sample.speech_probability =  vad(torch.from_numpy(sample.data_convert()), Settings.FREQUENCY).item()
+                try:
+                    sample.speech_probability =  vad(torch.from_numpy(sample.data_convert()), Settings.FREQUENCY).item()
+                except ValueError:
+                    sample.speech_probability = 0.0
+                    print(ValueError)
 
                 #if sample.speech_probability <= 0.60:
                 #    print(f"speech probability: {sample.speech_probability}")
@@ -90,6 +97,7 @@ try:
                         recognizer.append_data(sample.mfcc_get().T, timestamp_error)
                         timestamp_error = 0
                         recognizer.train()
+                        recognizer.check_for_speaker_change()
                         recognizer.adjust()
                 else:
                     timestamp_error += Settings.SEGMENT_DURATION_MS / 1000
@@ -111,6 +119,7 @@ try:
                     recognizer.append_data(sample.mfcc_get().T, timestamp_error)
                     timestamp_error = 0
                     recognizer.train()
+                    recognizer.check_for_speaker_change()
                     recognizer.adjust()
             else:
                 timestamp_error += Settings.SEGMENT_DURATION_MS / 1000
@@ -122,7 +131,9 @@ except IndexError:
 except ValueError:
     print("ValueError - end of file")
 finally:
-    if Settings.MAKE_PLOTS:
-        for recognizer in recognizers:
-            recognizer.plot()
+    pass
+
+if Settings.MAKE_PLOTS:
+    for recognizer in recognizers:
+        recognizer.plot()
         

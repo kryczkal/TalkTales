@@ -88,6 +88,8 @@ class Recongnizer:
                 return False
 
             if self.crossed_new_speaker_treshold():
+                if Settings.RECOGNIZER_LOG_SPEAKER_CHANGE:
+                    print(f"Speaker change on model {self.id}!")
                 self.save_current_speaker()
                 self.current_speaker = Speaker(self.max_id, self.gmm_is_trained_data_treshold)
                 self.current_speaker.model_train(self.mfcc_data[-self.n_data_per_hyp_speaker_training:])                 
