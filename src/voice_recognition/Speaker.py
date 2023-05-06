@@ -7,7 +7,7 @@ class Speaker:
     Simple class to used to represent different speakers.
     Each speaker has a corresponding GMM model and id
     """
-    def __init__(self, id):
+    def __init__(self, id, gmm_is_trained_data_treshold = Settings.GMM_IS_TRAINED_DATA_TRESHOLD):
         """
         Initializes an instance of Speaker class with the id of the speaker
         """
@@ -15,12 +15,13 @@ class Speaker:
         self.is_trained = False
         #self.data = []
         self.id = id
+        self.GMM_IS_TRAINED_DATA_TRESHOLD = gmm_is_trained_data_treshold
         
 
     def model_train(self, data):
         """Trains speaker GMM model using provided data"""
-        if (data.shape[0] > Settings.GMM_IS_TRAINED_DATA_TRESHOLD):
-            #self.is_trained = True
+        if (data.shape[0] > self.GMM_IS_TRAINED_DATA_TRESHOLD):
+            self.is_trained = True
             return
         self.model.fit(data)
     

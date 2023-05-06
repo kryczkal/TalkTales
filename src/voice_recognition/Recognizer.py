@@ -5,12 +5,12 @@ from Settings import Settings
 
 from SpeakerPlots import SpeakerPlots
 
-plotter = SpeakerPlots()
 class Recongnizer:
     """
     This class implements speaker recognition using KL divergence metric
     """
-    def __init__(self, iterations):
+    def __init__(self, iterations, id, number_treshold = Settings.NUMBER_TRESHOLD, percentage_treshold = Settings.PERCENTAGE_TRESHOLD,
+                gmm_is_trained__data_treshold = Settings.GMM_IS_TRAINED_DATA_TRESHOLD):
         """
         Initializes an instance of Recognizer class with default values.
         
@@ -21,13 +21,13 @@ class Recongnizer:
             divergences (list): a list to keep track of the Kullback-Liebler (KL) divergence between the current_speaker and hypothetical_speaker.
             max_id (int): the maximum id of the Speaker instances in the Recognizer class.
         """
-
-        self.current_speaker = Speaker(0)
-        self.hypothetical_speaker = Speaker(-1)
+        self.gmm_is_trained_data_treshold = gmm_is_trained__data_treshold
+        self.current_speaker = Speaker(0, gmm_is_trained__data_treshold)
+        self.hypothetical_speaker = Speaker(-1, gmm_is_trained__data_treshold)
         self.mfcc_data = None
 
-        self.NUMBER_TRESHOLD = 10
-        self.PERCENTAGE_TRESHOLD = 0.35
+        self.NUMBER_TRESHOLD = number_treshold # 0
+        self.PERCENTAGE_TRESHOLD = percentage_treshold
 
         self.speakers = []
         self.divergences = [] # TODO: do debugowania: wystarcza dwa
@@ -42,6 +42,9 @@ class Recongnizer:
         self.has_been_trained_once = False # the first gmm is completely untrained. that leads to errors in compare() fn
         # the following speaker gmms are trained on the data from hypothetical speaker, so the problem exists only with the first speaker
         self.timestamp_counter = 0
+        self.id = id
+        self.plotter = SpeakerPlots(id)
+        
 
     def save_current_speaker(self):
         """
@@ -76,24 +79,25 @@ class Recongnizer:
         if self.has_been_trained_once and self.should_train_and_compare():
             divergence = kl_distance(self.current_speaker.model_get(), self.hypothetical_speaker.model_get())
             if Settings.MAKE_PLOTS:
-                plotter.add_to_plot(self.current_speaker.id, self.timestamp_counter, divergence)
+                    self.plotter.add_to_plot(self.current_speaker.id, self.timestamp_counter, divergence)
 
-            print(f"divergence: {divergence}")
+            #print(f"divergence: {divergence}")
             
             self.divergences.append(divergence)
             if len(self.divergences) < 2:
                 return False
-            if self.crossed_new_speaker_treshold():
-                
-                self.save_current_speaker()
-                self.current_speaker = Speaker(self.max_id)
-                self.current_speaker.model_train(self.mfcc_data[-self.n_data_per_hyp_speaker_training:])
 
+            if self.crossed_new_speaker_treshold():
+                self.save_current_speaker()
+                self.current_speaker = Speaker(self.max_id, self.gmm_is_trained_data_treshold)
+                self.current_speaker.model_train(self.mfcc_data[-self.n_data_per_hyp_speaker_training:])                 
                 self.mfcc_data = self.mfcc_data[-self.n_data_per_hyp_speaker_training:]
 
                 self.max_id+=1
                 self.divergences.clear()
                 return True
+            
+            
 
             return False
 
@@ -113,15 +117,38 @@ class Recongnizer:
     
     def crossed_new_speaker_treshold(self):
         return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] \
-            and self.divergences[-1] - self.divergences[-2] > self.NUMBER_TRESHOLD
+            and self.divergences[-1] > self.NUMBER_TRESHOLD
     
     def adjust(self):
         if self.should_train_and_compare():
             self.data_in_current_training_iteration = 0
             # if the speaker is already trained we can delete the mfcc data and gather only enough for the hypothetical speaker to train
-            if self.current_speaker.is_trained:
-                self.mfcc_data = None
+            #if self.current_speaker.is_trained:
+            #    self.mfcc_data = None
 
     def plot(self):
         if Settings.MAKE_PLOTS:
-            plotter.plot()
+            try:
+                self.plotter.plot()
+            except ZeroDivisionError:
+                pass
+            print(self)
+
+    def __str__(self) -> str:
+        max_width = 25
+
+        messages = [
+            ("Recognizer: ", self.id),
+            ("SETTINGS: ", None),
+            ("Percentage Threshold: ", self.PERCENTAGE_TRESHOLD),
+            ("Number Threshold: ", self.NUMBER_TRESHOLD),
+            ("Data Threshold: ", self.gmm_is_trained_data_treshold),
+        ]
+        output = ''
+        for message, value in messages:
+            formatted_message = message.ljust(max_width)
+            if value is not None:
+                output += f"\n{formatted_message} {value}"
+            else:
+                output += f"\n{formatted_message}"
+        return output
