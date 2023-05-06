@@ -63,41 +63,45 @@ class Recongnizer:
                         False: No new Speaker instance was added.
                         True: New Speaker instance was added.
         """
-        if self.is_trained and self.should_train_and_compare():
-            divergence = kl_distance(self.current_speaker.model_get(), self.hypothetical_speaker.model_get())
-            print(f"divergence: {divergence}")
-            
-            self.divergences.append(divergence)
-            if len(self.divergences) < 2:
-                return False
-            if self.crossed_new_speaker_treshold():
-                
-                self.save_current_speaker()
-                self.current_speaker = Speaker(self.max_id)
-                self.current_speaker.model_train(self.mfcc_data[-self.data_number_treshold:])
-
-                self.mfcc_data = self.mfcc_data[-self.data_number_treshold:]
-
-                self.max_id+=1
-                self.divergences.clear()
-                return True
-
+        if not self.is_trained or not self.should_train_and_compare():
             return False
 
-    def train(self):
-        if self.should_train_and_compare(): 
-            self.hypothetical_speaker.model_train(self.mfcc_data[-self.data_number_treshold:])
-            self.current_speaker.model_train(self.mfcc_data)
-            self.is_trained = True
+        divergence = kl_distance(self.current_speaker.model_get(), self.hypothetical_speaker.model_get())
+        print(f"divergence: {divergence}")
+            
+        self.divergences.append(divergence)
+        if len(self.divergences) < 2:
+            return False
+        if self.crossed_new_speaker_treshold():
+                
+            self.save_current_speaker()
+            self.current_speaker = Speaker(self.max_id)
+            self.current_speaker.model_train(self.mfcc_data[-self.data_number_treshold:])
+
+            self.mfcc_data = self.mfcc_data[-self.data_number_treshold:]
+
+            self.max_id+=1
+            self.divergences.clear()
             return True
-        
+
         return False
-    
+
+    def train(self):
+        if not self.should_train_and_compare():
+            return False
+
+        self.hypothetical_speaker.model_train(self.mfcc_data[-self.data_number_treshold:])
+        self.current_speaker.model_train(self.mfcc_data)
+        self.is_trained = True
+        return True
+        
+
     def should_train_and_compare(self):
         return self.data_counter >= self.data_number_treshold # if we have acumulated data from a interval * 10ms window, we can train the model
 
     def crossed_new_speaker_treshold(self):
-        return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] and self.divergences[-1] > self.NUMBER_TRESHOLD
+        return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] \
+            and self.divergences[-1] > self.NUMBER_TRESHOLD
     
     def adjust(self):
         if self.should_train_and_compare():
