@@ -34,7 +34,7 @@ class VoiceSample:
         # Compute Mfcc component
         self.mfcc = librosa.feature.mfcc(y=self.data, sr=Settings.FREQUENCY,
                                           n_mfcc=13, fmin=100, fmax=8000, lifter=1,
-                                            n_fft=480) # 48000/100 (1/100 = 10/1000) okienko - 10 ms, 1000ms to sekunda
+                                            n_fft=int(Settings.FREQUENCY * 10 / 1000)) # 48000/100 (1/100 = 10/1000) okienko - 10 ms, 1000ms to sekunda
         return self.mfcc
     
     def data_convert(self):

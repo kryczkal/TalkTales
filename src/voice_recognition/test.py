@@ -1,3 +1,4 @@
+time_start = 0
 import time
 
 import pyaudio
@@ -65,7 +66,7 @@ try:
             byte_data = wav.readframes(Settings.CHUNK_SIZE)
         else:
             byte_data = stream.read(Settings.CHUNK_SIZE)
-            
+
         sample = VoiceSample(byte_data)
         sample.speech_probability =  vad(torch.from_numpy(sample.data_convert()), Settings.FREQUENCY).item()
 
