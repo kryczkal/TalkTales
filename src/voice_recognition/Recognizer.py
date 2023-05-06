@@ -2,6 +2,10 @@ import numpy as np
 
 from Speaker import Speaker, kl_distance
 from Settings import Settings
+
+from SpeakerPlots import SpeakerPlots
+
+plotter = SpeakerPlots()
 class Recongnizer:
     """
     This class implements speaker recognition using KL divergence metric
@@ -22,8 +26,8 @@ class Recongnizer:
         self.hypothetical_speaker = Speaker(-1)
         self.mfcc_data = None
 
-        self.NUMBER_TRESHOLD = 40
-        self.PERCENTAGE_TRESHOLD = 0.50
+        self.NUMBER_TRESHOLD = 10
+        self.PERCENTAGE_TRESHOLD = 0.35
 
         self.speakers = []
         self.divergences = [] # TODO: do debugowania: wystarcza dwa
@@ -37,6 +41,7 @@ class Recongnizer:
 
         self.has_been_trained_once = False # the first gmm is completely untrained. that leads to errors in compare() fn
         # the following speaker gmms are trained on the data from hypothetical speaker, so the problem exists only with the first speaker
+        self.timestamp_counter = 0
 
     def save_current_speaker(self):
         """
@@ -46,7 +51,7 @@ class Recongnizer:
         # TODO for gmm in self.speakers:
         self.speakers.append(self.current_speaker)
 
-    def append_data(self, mfcc_vector):
+    def append_data(self, mfcc_vector, error = 0):
         # if the mfcc vector is empty we need to initialize it
         if self.mfcc_data is None:
             self.mfcc_data = mfcc_vector
@@ -54,6 +59,8 @@ class Recongnizer:
         
         self.data_in_current_training_iteration += self.mfccs_per_append
         self.mfcc_data = np.append(self.mfcc_data, mfcc_vector, axis=0)
+        
+        self.timestamp_counter += Settings.SEGMENT_DURATION_MS / 1000 + error
 
     def check_for_speaker_change(self):
         """
@@ -68,6 +75,9 @@ class Recongnizer:
         """
         if self.has_been_trained_once and self.should_train_and_compare():
             divergence = kl_distance(self.current_speaker.model_get(), self.hypothetical_speaker.model_get())
+            if Settings.MAKE_PLOTS:
+                plotter.add_to_plot(self.current_speaker.id, self.timestamp_counter, divergence)
+
             print(f"divergence: {divergence}")
             
             self.divergences.append(divergence)
@@ -102,7 +112,8 @@ class Recongnizer:
         return self.data_in_current_training_iteration >= self.n_data_per_hyp_speaker_training # if we have acumulated data from a interval * 10ms window, we can train the model
 
     def crossed_new_speaker_treshold(self):
-        return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] and self.divergences[-1] > self.NUMBER_TRESHOLD
+        return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] \
+            and self.divergences[-1] - self.divergences[-2] > self.NUMBER_TRESHOLD
     
     def adjust(self):
         if self.should_train_and_compare():
@@ -110,3 +121,7 @@ class Recongnizer:
             # if the speaker is already trained we can delete the mfcc data and gather only enough for the hypothetical speaker to train
             if self.current_speaker.is_trained:
                 self.mfcc_data = None
+
+    def plot(self):
+        if Settings.MAKE_PLOTS:
+            plotter.plot()
