@@ -4,9 +4,10 @@ from math import ceil, sqrt
 import itertools
 from Speaker import Speaker
 class SpeakerPlots:
-    def __init__(self) -> None:
+    def __init__(self, id) -> None:
         self.plots = {}
         self.n_speakers = 0
+        self.id = id
 
     def add_to_plot(self, id, x, y):
         if id not in self.plots:
@@ -25,7 +26,7 @@ class SpeakerPlots:
             
         # plt.ylim = (5, 70)
         # plt.figure(figsize=(20,12))
-        
+        plt.suptitle(self.id)
         plt.tight_layout()
         plt.show()
         plt.close()

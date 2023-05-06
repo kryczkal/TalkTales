@@ -4,6 +4,8 @@ import librosa.feature
 import pyaudio as py
 
 from Settings import Settings
+import warnings
+warnings.filterwarnings("ignore")
 
 class VoiceSample:
     """
