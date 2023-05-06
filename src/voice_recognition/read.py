@@ -32,7 +32,7 @@ from Recognizer import Recongnizer
 audio = pyaudio.PyAudio()
 vad = webrtcvad.Vad(1)
 
-READ_FROM_FILE = True
+READ_FROM_FILE = False
 
 if READ_FROM_FILE:
     filename='src/voice-recognition/nagrywka1.wav'

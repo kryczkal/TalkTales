@@ -73,15 +73,12 @@ try:
     if READ_FROM_FILE:
         with tqdm(total=num_chunks) as pbar:
             while(byte_data):
-                if READ_FROM_FILE:
-                    byte_data=wav_data[byte_counter*4*Settings.CHUNK_SIZE:(byte_counter+1)*4*Settings.CHUNK_SIZE]
-                    byte_counter += 1
-                    if len(byte_data) < 4*Settings.CHUNK_SIZE:
-                        byte_data = False
-                        break
-                    pbar.update(1)
-                else:
-                    byte_data = stream.read(Settings.CHUNK_SIZE)
+                byte_data=wav_data[byte_counter*4*Settings.CHUNK_SIZE:(byte_counter+1)*4*Settings.CHUNK_SIZE]
+                byte_counter += 1
+                if len(byte_data) < 4*Settings.CHUNK_SIZE:
+                    byte_data = False
+                    break
+                pbar.update(1)
 
                 sample = VoiceSample(byte_data)
                 try:
@@ -102,12 +99,8 @@ try:
                 else:
                     timestamp_error += Settings.SEGMENT_DURATION_MS / 1000
     else:
-        while(byte_data):
-            if READ_FROM_FILE:
-                byte_data=wav_data[byte_counter*4*Settings.CHUNK_SIZE:(byte_counter+1)*4*Settings.CHUNK_SIZE]
-                byte_counter += 1
-            else:
-                byte_data = stream.read(Settings.CHUNK_SIZE)
+        while(True):
+            byte_data = stream.read(Settings.CHUNK_SIZE)
 
             sample = VoiceSample(byte_data)
             sample.speech_probability =  vad(torch.from_numpy(sample.data_convert()), Settings.FREQUENCY).item()
