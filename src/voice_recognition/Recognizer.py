@@ -36,9 +36,9 @@ class Recongnizer:
         self.mfccs_per_append = Settings.SEGMENT_DURATION_MS // 10 # number of mfcc vectors we get from one speech segment 
         self.n_data_per_hyp_speaker_training = self.mfccs_per_append * iterations # number of mfcc vectors we need to 
         # complete hypothetical speaker training
-
+        
         self.data_in_current_training_iteration = 0 # data currently ammased for the hypothetical speaker
-
+     
         self.has_been_trained_once = False # the first gmm is completely untrained. that leads to errors in compare() fn
         # the following speaker gmms are trained on the data from hypothetical speaker, so the problem exists only with the first speaker
         self.timestamp_counter = 0
@@ -110,7 +110,7 @@ class Recongnizer:
     
     def should_train_and_compare(self):
         return self.data_in_current_training_iteration >= self.n_data_per_hyp_speaker_training # if we have acumulated data from a interval * 10ms window, we can train the model
-
+    
     def crossed_new_speaker_treshold(self):
         return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] \
             and self.divergences[-1] - self.divergences[-2] > self.NUMBER_TRESHOLD
