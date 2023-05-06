@@ -26,15 +26,17 @@ class Recongnizer:
         self.PERCENTAGE_TRESHOLD = 0.50
 
         self.speakers = []
-        self.divergences = [] # Todo: do debugowania: wystarcza dwa
+        self.divergences = [] # TODO: do debugowania: wystarcza dwa
         self.max_id = 1
 
-        self.mfccs_per_append = Settings.SEGMENT_DURATION_MS // 10
-        self.data_number_treshold = self.mfccs_per_append * iterations
+        self.mfccs_per_append = Settings.SEGMENT_DURATION_MS // 10 # number of mfcc vectors we get from one speech segment 
+        self.n_data_per_hyp_speaker_training = self.mfccs_per_append * iterations # number of mfcc vectors we need to 
+        # complete hypothetical speaker training
 
-        self.data_counter = 0
+        self.data_in_current_training_iteration = 0 # data currently ammased for the hypothetical speaker
 
-        self.is_trained = False
+        self.has_been_trained_once = False # the first gmm is completely untrained. that leads to errors in compare() fn
+        # the following speaker gmms are trained on the data from hypothetical speaker, so the problem exists only with the first speaker
 
     def save_current_speaker(self):
         """
@@ -45,11 +47,12 @@ class Recongnizer:
         self.speakers.append(self.current_speaker)
 
     def append_data(self, mfcc_vector):
+        # if the mfcc vector is empty we need to initialize it
         if self.mfcc_data is None:
             self.mfcc_data = mfcc_vector
             return
-            
-        self.data_counter += self.mfccs_per_append
+        
+        self.data_in_current_training_iteration += self.mfccs_per_append
         self.mfcc_data = np.append(self.mfcc_data, mfcc_vector, axis=0)
 
     def check_for_speaker_change(self):
@@ -63,7 +66,7 @@ class Recongnizer:
                         False: No new Speaker instance was added.
                         True: New Speaker instance was added.
         """
-        if self.is_trained and self.should_train_and_compare():
+        if self.has_been_trained_once and self.should_train_and_compare():
             divergence = kl_distance(self.current_speaker.model_get(), self.hypothetical_speaker.model_get())
             print(f"divergence: {divergence}")
             
@@ -74,9 +77,9 @@ class Recongnizer:
                 
                 self.save_current_speaker()
                 self.current_speaker = Speaker(self.max_id)
-                self.current_speaker.model_train(self.mfcc_data[-self.data_number_treshold:])
+                self.current_speaker.model_train(self.mfcc_data[-self.n_data_per_hyp_speaker_training:])
 
-                self.mfcc_data = self.mfcc_data[-self.data_number_treshold:]
+                self.mfcc_data = self.mfcc_data[-self.n_data_per_hyp_speaker_training:]
 
                 self.max_id+=1
                 self.divergences.clear()
@@ -86,19 +89,24 @@ class Recongnizer:
 
     def train(self):
         if self.should_train_and_compare(): 
-            self.hypothetical_speaker.model_train(self.mfcc_data[-self.data_number_treshold:])
-            self.current_speaker.model_train(self.mfcc_data)
-            self.is_trained = True
+            self.hypothetical_speaker.model_train(self.mfcc_data[-self.n_data_per_hyp_speaker_training:])
+            if not self.current_speaker.is_trained:
+                self.current_speaker.model_train(self.mfcc_data)
+
+            self.has_been_trained_once = True
             return True
         
         return False
     
     def should_train_and_compare(self):
-        return self.data_counter >= self.data_number_treshold # if we have acumulated data from a interval * 10ms window, we can train the model
+        return self.data_in_current_training_iteration >= self.n_data_per_hyp_speaker_training # if we have acumulated data from a interval * 10ms window, we can train the model
 
     def crossed_new_speaker_treshold(self):
         return self.divergences[-1] - self.divergences[-2] > self.PERCENTAGE_TRESHOLD*self.divergences[-2] and self.divergences[-1] > self.NUMBER_TRESHOLD
     
     def adjust(self):
         if self.should_train_and_compare():
-            self.data_counter = 0
+            self.data_in_current_training_iteration = 0
+            # if the speaker is already trained we can delete the mfcc data and gather only enough for the hypothetical speaker to train
+            if self.current_speaker.is_trained:
+                self.mfcc_data = None

@@ -1,6 +1,7 @@
 from sklearn.mixture import GaussianMixture
 import numpy as np
 
+from Settings import Settings
 class Speaker:
     """
     Simple class to used to represent different speakers.
@@ -11,12 +12,16 @@ class Speaker:
         Initializes an instance of Speaker class with the id of the speaker
         """
         self.model = GaussianMixture(n_components=16)
+        self.is_trained = False
         #self.data = []
         self.id = id
         
 
     def model_train(self, data):
         """Trains speaker GMM model using provided data"""
+        if (data.shape[0] > Settings.GMM_IS_TRAINED_DATA_TRESHOLD):
+            self.is_trained = True
+            return
         self.model.fit(data)
     
     def model_get(self):
