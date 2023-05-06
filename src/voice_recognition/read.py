@@ -7,7 +7,6 @@ import webrtcvad
 import wave
 
 from Sample import VoiceSample
-from VoiceRecog import *
 from Settings import Settings
 
 from plots import plot_mfcc
