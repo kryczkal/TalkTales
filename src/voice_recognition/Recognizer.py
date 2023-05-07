@@ -96,6 +96,7 @@ class Recongnizer:
                 self.mfcc_data = self.mfcc_data[-self.n_data_per_hyp_speaker_training:]
 
                 self.max_id+=1
+                print(self.timestamp_counter - Settings.SEGMENT_DURATION_MS / 1000)
                 self.divergences.clear()
                 return True
             
