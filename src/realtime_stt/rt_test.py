@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 from time import sleep
 
 
-def main():
+def speech_to_text(source):
     # model_choices=["tiny", "base", "small", "medium", "large"])
     with open('config.json', 'r') as f:
         ARGS = load(f)
@@ -33,11 +33,10 @@ def main():
     # where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
 
-    source = sr.Microphone(sample_rate=ARGS['frequency'])
-
+    mic_source = sr.Microphone(sample_rate=ARGS['frequency'], chunk_size=1200)
     # Load / Download model
     model = ARGS['model']
-    # Allow loading englishimage.png-only models
+    # Allow loading english-only models
     if ARGS['language'] == 'en':
         model += '.en'
     # If model fails to be fetched (e.g. the machine is offline),
@@ -54,8 +53,8 @@ def main():
     temp_file = NamedTemporaryFile().name
     transcription = ['']
 
-    with source:
-        recorder.adjust_for_ambient_noise(source)
+    with mic_source:
+        recorder.adjust_for_ambient_noise(mic_source)
 
     def record_callback(_, audio: sr.AudioData) -> None:
         """Threaded callback function to receive audio data
@@ -155,4 +154,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    speech_to_text()
