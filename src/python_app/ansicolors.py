@@ -18,27 +18,66 @@ class Colors(Enum):
     BRIGHT_MAGENTA = 13
     BRIGHT_CYAN = 14
     BRIGHT_WHITE = 15
+    DEFAULT = 16
 
     def __int__(self):
+        if self.value == 16:
+            return self.value + 23
+        elif self.value < 8:
+            return self.value + 30
+        else:
+            return self.value + 82
+
+    def __str__(self) -> str:
+        return f'\033[{int(self)}m'
+
+
+class Formatting(Enum):
+    RESET = 0
+    BOLD = 1
+    FAINT = 2
+    ITALIC = 3
+    UNDERLINE = 4
+    BLINK = 5
+    RAPID_BLINK = 6
+    INVERSE = 7
+    CONCEAL = 8
+    STRIKETHROUGH = 9
+    FRAKTUR = 20  # hardly ever supported
+    DOUBLE_UNDERLINE = 21
+    LIGHT = 22  # neither BOLD or FAINT
+    NONITALIC = 23
+    REMOVE_UNDERLINE = 24
+    FRAMED = 51
+    ENCIRCLED = 52
+    OVERLINED = 53
+    UNFRAMED = 54
+    REMOVE_OVERLINE = 55
+
+    def __int__(self) -> int:
         return self.value
+
+    def __str__(self) -> str:
+        return f'\033[{self.value}m'
 
 
 def reset():
     return '\033[0m'
 
 
-def bold():
-    return '\033[1m'
+def color(fg: Colors | int, bg: Colors | int | None = None) -> str:
+    return f'\033[{int(fg)}' + (
+        f';{int(bg)}' if bg else '') + 'm'
 
 
-def underline():
-    return '\033[4m'
+class FormattedPrint(object):
+    def __init__(self, fg: int | Colors | None = None,
+                 bg: int | Colors | None = None) -> None:
+        self.fg = fg
+        self.bg = bg
 
+    def __enter__(self):
+        print(color(self.fg, self.bg), end=None)
 
-def inverse():
-    return '\033[7m'
-
-
-def color(fg: Colors | int, bg: Colors | int | None = None):
-    return f'\033[{30 + (int)(fg) + ((int)(fg) & 8)//2 * 13}' + (
-        f';{40 + (int)(bg) + ((int)(bg) & 8)//2 * 13}' if bg else '') + 'm'
+    def __exit__(self, *args):
+        print(reset(), end=None)
