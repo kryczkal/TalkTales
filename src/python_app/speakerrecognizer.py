@@ -24,7 +24,7 @@ def speaker_detector(input: SimpleQueue, output: SimpleQueue,
     timestamp_error = 0
     signals['ready'].set()
     while True:
-        print('speaker recognizer')
+        # print('speaker recognizer')
         byte_data = input.get()
 
         sample = VoiceSample(byte_data)
@@ -39,7 +39,6 @@ def speaker_detector(input: SimpleQueue, output: SimpleQueue,
             recognizer.train()
             res = recognizer.check_for_speaker_change()
             if res:
-                print(res)
                 output.put(res)
             recognizer.adjust()
         else:

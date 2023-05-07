@@ -78,7 +78,7 @@ def speech_to_text(source: sr.AudioSource,
     transcription_start = datetime.utcnow()
     phrase_start = datetime.utcnow()
     while True:
-        print('speech to text')
+        # print('speech to text')
         try:
             now = datetime.utcnow()
             # Pull raw recorded audio from the queue.
@@ -118,22 +118,24 @@ def speech_to_text(source: sr.AudioSource,
                                             language=Settings.LANGUAGE)
                 # text = result['text'].strip()
                 # prototyp timestamp
-                text = ''
+                text = []
                 if result['segments']:
                     for i in result['segments']:
                         for j in i['words']:
                             diff = phrase_start + timedelta(seconds=j['start'])
                             diff -= transcription_start
-                            text += f'<{diff.seconds}.'
-                            text += f'{round(diff.microseconds, 2)}> '
-                            text += j['text'].strip() + ' '
+                            text.append((
+                                diff.seconds + diff.microseconds / 1000000,
+                                j['text'].strip()
+                            ))
 
                 # If we detected a pause between recordings,
                 # add a new item to our transcripion.
                 # Otherwise edit the existing one.
                 if phrase_complete:
-                    print(transcription)
-                    output.put(transcription)
+                    # print(transcription)
+                    for i in transcription:
+                        output.put(i)
                 transcription = text
 
                 # Clear the console to reprint

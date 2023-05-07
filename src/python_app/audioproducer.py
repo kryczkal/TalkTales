@@ -1,5 +1,6 @@
 from queue import SimpleQueue
 from threading import Event
+from settings import Settings
 
 import pyaudio as pyaud
 
@@ -12,10 +13,10 @@ def produce_audio(stt_output: SimpleQueue, sr_output: SimpleQueue,
     and should not be called synchronously
     """
 
-    freq = 48000
+    freq = Settings.FREQUENCY
     # duration = 1000.0
-    format = pyaud.paInt16
-    chunk = 1200
+    format = Settings.STREAMFORMAT
+    chunk = Settings.CHUNK_SIZE // 4
 
     stream = pyaud.PyAudio().open(format=format, channels=1, rate=freq,
                                   input=True, frames_per_buffer=chunk)
