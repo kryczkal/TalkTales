@@ -18,7 +18,7 @@ class Settings:
 
     # SPEECH TO TEXT SETTINGS
     # model_choices=["tiny", "base", "small", "medium", "large"])
-    MODEL = 'small'
+    MODEL = 'medium'
     LANGUAGE = 'pl'
     ENERGY_THRESHOLD = 1000
     RECORD_TIMEOUT = 2
