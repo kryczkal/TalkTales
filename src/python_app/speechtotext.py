@@ -1,6 +1,6 @@
 import io
 import speech_recognition as sr
-import whisper_timestamped as whisper
+import whisper  # whisper_timestamped as whisper
 import torch
 
 from os import path
@@ -113,21 +113,20 @@ def speech_to_text(source: sr.AudioSource,
                     f.write(wav_data.read())
 
                 # Read the transcription.
-                result = whisper.transcribe(audio_model, temp_file,
-                                            fp16=torch.cuda.is_available(),
-                                            language=Settings.LANGUAGE)
+                result = audio_model.transcribe(temp_file,
+                                                fp16=torch.cuda.is_available(),
+                                                language=Settings.LANGUAGE)
                 # text = result['text'].strip()
                 # prototyp timestamp
                 text = []
                 if result['segments']:
                     for i in result['segments']:
-                        for j in i['words']:
-                            diff = phrase_start + timedelta(seconds=j['start'])
-                            diff -= transcription_start
-                            text.append((
-                                diff.seconds + diff.microseconds / 1000000,
-                                j['text'].strip()
-                            ))
+                        diff = phrase_start + timedelta(seconds=i['start'])
+                        diff -= transcription_start
+                        text.append((
+                            diff.seconds + diff.microseconds / 1000000,
+                            i['text'].strip()
+                        ))
 
                 # If we detected a pause between recordings,
                 # add a new item to our transcripion.
@@ -151,9 +150,9 @@ def speech_to_text(source: sr.AudioSource,
         except KeyboardInterrupt:
             break
 
-    print("\n\nTranscription:")
-    for line in transcription:
-        print(line)
+    # print("\n\nTranscription:")
+    # for line in transcription:
+    #     print(line)
 
 
 if __name__ == "__main__":

@@ -80,6 +80,7 @@ if __name__ == '__main__':
                 rewrite = True
             if rewrite:
                 os.system('cls' if os.name == 'nt' else 'clear')
+                print(color(currcolor + 1))
                 for i in transcription:
                     if isinstance(i[1], str):
                         print(i[1])
