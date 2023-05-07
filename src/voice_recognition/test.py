@@ -31,9 +31,9 @@ vad, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
 rn = np.random.RandomState(26)
 
 # Random Recongnizers
-recognizers = []
-for i in range (Settings.N_OF_RECOGNIZERS):
-    recognizers.append(Recongnizer(30, 0 + i, number_treshold= Settings.NUMBER_TRESHOLD + rn.randint(-20,20), percentage_treshold= Settings.PERCENTAGE_TRESHOLD + rn.uniform(-0.2,0.2), gmm_is_trained__data_treshold = Settings.GMM_IS_TRAINED_DATA_TRESHOLD - rn.randint(0,Settings.GMM_IS_TRAINED_DATA_TRESHOLD/2)))
+recognizers = [Recongnizer(30,1)]
+#for i in range (Settings.N_OF_RECOGNIZERS):
+#    recognizers.append(Recongnizer(30, 0 + i, number_treshold= Settings.NUMBER_TRESHOLD + rn.randint(-20,20), percentage_treshold= Settings.PERCENTAGE_TRESHOLD + rn.uniform(-0.2,0.2), gmm_is_trained__data_treshold = Settings.GMM_IS_TRAINED_DATA_TRESHOLD - rn.randint(0,Settings.GMM_IS_TRAINED_DATA_TRESHOLD/2)))
 
 # Not random recongnizers
 
@@ -50,7 +50,7 @@ for i in range (Settings.N_OF_RECOGNIZERS):
 READ_FROM_FILE = True
 
 if READ_FROM_FILE:
-    filename='src/voice_recognition/nag3.wav'
+    filename='src/voice_recognition/nag2.wav'
     filesize = os.path.getsize(filename)
  
     with open(filename, 'rb') as wav:
