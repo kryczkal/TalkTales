@@ -1,6 +1,6 @@
 {
-    "model": "base",
-    "frequency": 48000,
+    "model": "medium",
+    "frequency": 44100,
     "energy_threshold": 1000,
     "record_timeout": 2,
     "phrase_timeout": 3,
