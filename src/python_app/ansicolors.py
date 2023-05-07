@@ -22,7 +22,7 @@ class Colors(Enum):
 
     def __int__(self):
         if self.value == 16:
-            return self.value + 23
+            return 39
         elif self.value < 8:
             return self.value + 30
         else:
@@ -67,7 +67,7 @@ def reset():
 
 def color(fg: Colors | int, bg: Colors | int | None = None) -> str:
     return f'\033[{int(fg)}' + (
-        f';{int(bg)}' if bg else '') + 'm'
+        f';{int(bg) + 10}' if bg else '') + 'm'
 
 
 class FormattedPrint(object):
