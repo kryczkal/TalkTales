@@ -16,14 +16,12 @@ def produce_audio(stt_output: SimpleQueue, sr_output: SimpleQueue,
     freq = Settings.FREQUENCY
     # duration = 1000.0
     format = Settings.STREAMFORMAT
-    chunk = Settings.CHUNK_SIZE // 4
+    chunk = Settings.CHUNK_SIZE
 
     stream = pyaud.PyAudio().open(format=format, channels=1, rate=freq,
                                   input=True, frames_per_buffer=chunk)
+
     while True:
-        set = bytes()
-        for i in range(4):
-            data = stream.read(chunk)
-            stt_output.put(data)
-            set += data
-        sr_output.put(set)
+        data = stream.read(chunk)
+        stt_output.put(data)
+        sr_output.put(data)

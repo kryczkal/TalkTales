@@ -4,7 +4,6 @@ from time import sleep
 from bisect import insort
 from ansicolors import color, reset
 
-import micstream as ms
 import os
 
 from speechtotext import speech_to_text
@@ -20,21 +19,23 @@ voice_rec_data = SimpleQueue()
 # daemon ready event
 stt_ready = Event()
 sr_ready = Event()
+stt_stop = Event()
+sr_stop = Event()
 
-source = ms.RemoteStreamSource(stt_audio)  # TODO
 
 if __name__ == '__main__':
 
     audio_thread = Thread(
         target=produce_audio,
-        args=(stt_audio, voice_rec_audio),
+        args=(stt_audio, voice_rec_audio, {}),
         name='audio_producer',
         daemon=True
     )
     stt_thread = Thread(
         target=speech_to_text,
-        args=(source, stt_data, {
-            'ready': stt_ready
+        args=(stt_audio, stt_data, {
+            'ready': stt_ready,
+            'stop': stt_stop
         }),
         name='stt',
         daemon=True
@@ -42,7 +43,8 @@ if __name__ == '__main__':
     voice_rec_thread = Thread(
         target=speaker_detector,
         args=(voice_rec_audio, voice_rec_data, {
-            'ready': sr_ready
+            'ready': sr_ready,
+            'stop': sr_stop
         }),
         name='voice_rec',
         daemon=True
