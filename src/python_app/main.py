@@ -2,7 +2,7 @@ from queue import SimpleQueue
 from threading import Thread, Event
 from time import sleep
 from bisect import insort
-from ansicolors import color, reset
+from ansicolors import Colors, reset
 
 import os
 
@@ -82,12 +82,12 @@ if __name__ == '__main__':
                 rewrite = True
             if rewrite:
                 os.system('cls' if os.name == 'nt' else 'clear')
-                print(color(currcolor + 1))
+                print(Colors(currcolor + 1), end='')
                 for i in transcription:
                     if isinstance(i[1], str):
                         print(i[1])
                     else:
-                        print(color(1 + (currcolor := not currcolor)))
+                        print(Colors(1 + (currcolor := not currcolor)), end='')
                 rewrite = False
         # stt_packet = stt_data.get()
         # voice_rec_packet = voice_rec_data.get()
