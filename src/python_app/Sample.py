@@ -2,7 +2,7 @@ import numpy as np
 from librosa.feature import mfcc as libr_mfcc
 import pyaudio as py
 
-from settings import Settings
+from Settings import Settings
 import warnings
 warnings.filterwarnings("ignore")
 

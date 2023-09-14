@@ -3,15 +3,14 @@ import numpy
 
 
 class Settings:
-    STREAMFORMAT = pyaudio.paInt16
-    DATAFORMAT = numpy.float32
-    CHANNELS = 1  # Mono
+    STREAM_FORMAT = pyaudio.paInt16
+    DATA_FORMAT = numpy.float32
+    CHANNELS = 1  # Mono channel support only
     FREQUENCY = 48000  # Sampling rate (48kHz)
     SEGMENT_DURATION_MS = 100  # Segment duration in milliseconds
-    frames_per_segment = FREQUENCY * SEGMENT_DURATION_MS // 1000
-    CHUNK_SIZE = frames_per_segment  # Size of each audio chunk
+    FRAMES_PER_SEGMENT = FREQUENCY * SEGMENT_DURATION_MS // 1000 # Segment expressed in frames (single data unit)
 
     # RECOGNIZER SETTINGS
-    GMM_IS_TRAINED_DATA_TRESHOLD = 1620  # 16 seconds of training are enough
-    NUMBER_TRESHOLD = 30  # 0
-    PERCENTAGE_TRESHOLD = 0.35
+    GMM_IS_TRAINED_DATA_THRESHOLD = 1620  # 16 seconds of training are enough
+    NUMBER_THRESHOLD = 30  # 0
+    PERCENTAGE_THRESHOLD = 0.35

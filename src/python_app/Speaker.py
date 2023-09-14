@@ -1,6 +1,6 @@
 from sklearn.mixture import GaussianMixture
 
-from settings import Settings
+from Settings import Settings
 
 
 class Speaker:

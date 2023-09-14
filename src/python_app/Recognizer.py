@@ -1,7 +1,7 @@
 import numpy as np
 
 from Speaker import Speaker, kl_distance
-from settings import Settings
+from Settings import Settings
 
 
 class Recongnizer:

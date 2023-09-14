@@ -3,13 +3,14 @@ from queue import SimpleQueue
 from threading import Event
 from os.path import realpath
 from json import loads
+from Settings import Settings
 
 
 def speech_to_text(input: SimpleQueue, output: SimpleQueue,
                    signals: dict[Event]):
     model_path = realpath('./vosk-model-small-pl-0.22')
     model = Model(model_path, lang='pl')
-    recognizer = KaldiRecognizer(model, 48000)
+    recognizer = KaldiRecognizer(model, Settings.FREQUENCY)
     signals['ready'].set()
     time = 0
     while not signals['stop'].is_set():

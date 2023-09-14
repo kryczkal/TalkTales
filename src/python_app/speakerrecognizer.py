@@ -3,7 +3,7 @@ import torchaudio
 
 from queue import SimpleQueue
 from Sample import VoiceSample
-from settings import Settings
+from Settings import Settings
 from threading import Event
 from Recognizer import Recongnizer
 
