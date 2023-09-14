@@ -1,8 +1,0 @@
-librosa
-numpy
-pyaudio
-matplotlib
-webrtcvad
-torch
-torchaudio
-tqdm

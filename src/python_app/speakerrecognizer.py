@@ -2,10 +2,10 @@ import torch
 import torchaudio
 
 from queue import SimpleQueue
-from Sample import VoiceSample
+from ..diarization.Sample import VoiceSample
 from Settings import Settings
 from threading import Event
-from Recognizer import Recongnizer
+from ..diarization.Recognizer import Recongnizer
 
 
 def speaker_detector(input: SimpleQueue, output: SimpleQueue,
