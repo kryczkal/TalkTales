@@ -3,7 +3,7 @@ from queue import SimpleQueue
 from threading import Event
 from os.path import realpath
 from json import loads
-from Settings import Settings
+from ..Settings import Settings
 
 
 def speech_to_text(input: SimpleQueue, output: SimpleQueue,

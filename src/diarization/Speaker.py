@@ -1,30 +1,28 @@
 from sklearn.mixture import GaussianMixture
 import numpy as np
 
-from Settings import Settings
+# from ..Settings import Settings
+from ..Settings import Settings
 
 class Speaker:
     """
     Simple class to used to represent different speakers.
     Each speaker has a corresponding GMM model and id
     """
-    def __init__(self, id, gmm_is_trained_data_treshold = Settings.GMM_IS_TRAINED_DATA_TRESHOLD):
+    def __init__(self, id: int):
         """
         Initializes an instance of Speaker class with the id of the speaker
         """
         self.model = GaussianMixture(n_components=16)
-        self.is_trained = False
-        #self.data = []
+        self.training_done = False
         self.id = id
-        self.GMM_IS_TRAINED_DATA_TRESHOLD = gmm_is_trained_data_treshold
-        
 
-    def model_train(self, data):
+    def model_train(self, mfcc_vectors_array: np.ndarray) -> None:
         """Trains speaker GMM model using provided data"""
-        if (data.shape[0] > self.GMM_IS_TRAINED_DATA_TRESHOLD):
-            self.is_trained = True
+        if (mfcc_vectors_array.shape[0] >= Settings.MFCC_MAX_SIZE):
+            self.training_done = True
             return
-        self.model.fit(data)
+        self.model.fit(mfcc_vectors_array)
     
     def model_get(self):
         """Returns the speaker model for passage into other functions"""
@@ -34,14 +32,14 @@ class Speaker:
     #    self.data = np.append(self.data, sample_data)
 
 
-def kl_distance(gmm_x, gmm_y, n_samples=10 ** 3):
+def kl_distance(gmm_x: GaussianMixture, gmm_y: GaussianMixture, n_samples: int = 10 ** 3) -> float:
     """
     Calculates the Kullback-Leibler (KL) divergence between two Gaussian Mixture Models (GMMs), gmm_x and gmm_y.
     
     Args:
         gmm_x (object): Gaussian Mixture Model object \n
         mm_y (object): Gaussian Mixture Model object \n
-        n_samples (int): Number of samples to be drawn from the gmm_x GMM 
+        n_samples (int): Number of samples used in comparison
     
     Returns:
         float: KL divergence value

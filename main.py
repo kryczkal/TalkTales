@@ -2,13 +2,13 @@ from queue import SimpleQueue
 from threading import Thread, Event
 from time import sleep
 from bisect import insort
-from ansicolors import color, reset
+from src.python_app.ansicolors import color, reset
 
 import os
 
-from speechtotext import speech_to_text
-from speakerrecognizer import speaker_detector
-from audioproducer import produce_audio
+from src.python_app.speechtotext import speech_to_text
+from src.python_app.speakerrecognizer import speaker_detector
+from src.python_app.audioproducer import produce_audio
 
 # inputs of audio processors, simple byte data
 speech_text_audio = SimpleQueue()

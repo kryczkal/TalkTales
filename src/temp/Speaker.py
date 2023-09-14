@@ -9,7 +9,7 @@ class Speaker:
     Each speaker has a corresponding GMM model and id
     """
     def __init__(self, id,
-                 gmm_is_trained_data_treshold=Settings.GMM_IS_TRAINED_DATA_TRESHOLD):  # noqa: E501
+                 gmm_is_trained_data_treshold=Settings.MFCC_MAX_SIZE):  # noqa: E501
         """
         Initializes an instance of Speaker class with the id of the speaker
         """

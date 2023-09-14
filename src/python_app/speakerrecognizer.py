@@ -5,7 +5,7 @@ from queue import SimpleQueue
 from ..diarization.Sample import VoiceSample
 from Settings import Settings
 from threading import Event
-from ..diarization.Recognizer import Recongnizer
+from ..diarization.Diarizer import Diarizer
 
 
 def speaker_detector(input: SimpleQueue, output: SimpleQueue,
@@ -17,7 +17,7 @@ def speaker_detector(input: SimpleQueue, output: SimpleQueue,
                                 force_reload=True)
 
     # Random Recongnizers
-    recognizer = Recongnizer(30, 0)
+    recognizer = Diarizer(30, 0)
 
     # print("Recording audio... Press Ctrl+C to stop.")
     # byte_counter = 0
@@ -40,7 +40,7 @@ def speaker_detector(input: SimpleQueue, output: SimpleQueue,
             res = recognizer.check_for_speaker_change()
             if res:
                 output.put(res)
-            recognizer.adjust()
+            recognizer.is_the_model_trained()
         else:
             timestamp_error += Settings.SEGMENT_DURATION_MS / 1000
             # output.put(None)

@@ -8,8 +8,8 @@ class Recongnizer:
     """
     This class implements speaker recognition using KL divergence metric
     """
-    def __init__(self, iterations, id=0, number_treshold=Settings.NUMBER_TRESHOLD, percentage_treshold=Settings.PERCENTAGE_TRESHOLD,  # noqa: E501
-                 gmm_is_trained__data_treshold=Settings.GMM_IS_TRAINED_DATA_TRESHOLD):  # noqa: E501
+    def __init__(self, iterations, id=0, number_treshold=Settings.NUMBER_THRESHOLD, percentage_treshold=Settings.PERCENTAGE_TRESHOLD,  # noqa: E501
+                 gmm_is_trained__data_treshold=Settings.MFCC_MAX_SIZE):  # noqa: E501
         """
         Initializes an instance of Recognizer class with default values.
 

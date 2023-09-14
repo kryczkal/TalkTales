@@ -6,12 +6,12 @@ import time as t
 import webrtcvad
 import wave
 
-from Sample import VoiceSample
-from Settings import Settings
+from src.diarization.Sample import VoiceSample
+from src.Settings import Settings
 
 import matplotlib.pyplot as plt
-from Speaker import Speaker, kl_distance
-from Recognizer import Recongnizer
+from src.diarization.Speaker import Speaker, kl_distance
+from src.diarization.Diarizer import Diarizer
 
 # The code imports necessary libraries and files such as pyaudio, webrtcvad, numpy, Sample, VoiceRecog, Settings, plots, Speaker, and Recognizer. 
 # # The code sets a boolean variable 'READ_FROM_FILE' to True, which determines whether the audio is being read from a file or recorded live.
@@ -55,10 +55,10 @@ else:
                         channels=Settings.CHANNELS, 
                         rate=Settings.FREQUENCY, 
                         input=True, 
-                        frames_per_buffer=Settings.CHUNK_SIZE)
+                        frames_per_buffer=Settings.FRAMES_PER_SEGMENT)
 
 
-recognizer = Recongnizer()
+recognizer = Diarizer()
 
 once = True
 it = 300
@@ -76,9 +76,9 @@ try:
     while True:
         
         if READ_FROM_FILE:
-            byte_data = wav.readframes(Settings.CHUNK_SIZE)
+            byte_data = wav.readframes(Settings.FRAMES_PER_SEGMENT)
         else:
-            byte_data = stream.read(Settings.CHUNK_SIZE)
+            byte_data = stream.read(Settings.FRAMES_PER_SEGMENT)
             
         sample = VoiceSample(byte_data,
                             vad.is_speech(byte_data, Settings.FREQUENCY),

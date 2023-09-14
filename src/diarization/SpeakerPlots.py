@@ -2,21 +2,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import ceil, sqrt
 import itertools
-from Speaker import Speaker
+from .Speaker import Speaker
 
 class SpeakerPlots:
-    def __init__(self, id) -> None:
+    def __init__(self, id: int) -> None:
         self.plots = {}
         self.n_speakers = 0
         self.id = id
 
-    def add_to_plot(self, id, x, y):
+    def add_to_plot(self, id, x, y) -> None:
         if id not in self.plots:
             self.plots[id] = []
             self.n_speakers +=1
         self.plots[id].append( (x, y) )
     
-    def plot(self):
+    def plot(self) -> None:
         n_rows = int(sqrt(self.n_speakers))
         n_cols = ceil(self.n_speakers / n_rows)
         

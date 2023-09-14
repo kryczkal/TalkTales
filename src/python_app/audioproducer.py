@@ -1,6 +1,6 @@
 from queue import SimpleQueue
 from threading import Event
-from Settings import Settings
+from ..Settings import Settings
 
 import pyaudio as pyaud
 

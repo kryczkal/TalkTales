@@ -7,12 +7,12 @@ import torchaudio
 import os
 from tqdm import tqdm
 
-from Sample import VoiceSample
-from Settings import Settings
+from src.diarization.Sample import VoiceSample
+from src.Settings import Settings
 
 import matplotlib.pyplot as plt
-from Speaker import Speaker, kl_distance
-from Recognizer import Recongnizer
+from src.diarization.Speaker import Speaker, kl_distance
+from src.diarization.Diarizer import Diarizer
 import itertools
 audio = pyaudio.PyAudio()
 
@@ -30,7 +30,7 @@ vad, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
 rn = np.random.RandomState(26)
 
 # Random Recongnizers
-recognizers = [Recongnizer(30,1)]
+diarizers = [Diarizer()]
 
 READ_FROM_FILE = True
 
@@ -54,11 +54,11 @@ else:
 try:
     print("Recording audio... Press Ctrl+C to stop.")
     byte_counter = 0
-    timestamp_error = 0
+    silent_seconds = 0
     if READ_FROM_FILE:
-        with tqdm(total=num_chunks) as pbar:
+        with tqdm(total = num_chunks) as pbar:
             while(byte_data):
-                byte_data=wav_data[byte_counter*4*Settings.FRAMES_PER_SEGMENT:(byte_counter+1)*4*Settings.FRAMES_PER_SEGMENT]
+                byte_data = wav_data[byte_counter*4*Settings.FRAMES_PER_SEGMENT:(byte_counter+1)*4*Settings.FRAMES_PER_SEGMENT]
                 byte_counter += 1
                 if len(byte_data) < 4*Settings.FRAMES_PER_SEGMENT:
                     byte_data = False
@@ -75,14 +75,11 @@ try:
                 #if sample.speech_probability <= 0.60:
                 #    print(f"speech probability: {sample.speech_probability}")
                 if sample.speech_probability > 0.60: 
-                    for recognizer in recognizers:
-                        recognizer.append_data(sample.mfcc_get().T, timestamp_error)
-                        timestamp_error = 0
-                        recognizer.train()
-                        recognizer.check_for_speaker_change()
-                        recognizer.adjust()
+                    for diarizer in diarizers:
+                        diarizer.diarize(sample.mfcc_get().T, silent_seconds)
+                        silent_seconds = 0
                 else:
-                    timestamp_error += Settings.SEGMENT_DURATION_MS / 1000
+                    silent_seconds += Settings.SEGMENT_DURATION_MS / 1000
     else:
         while(True):
             byte_data = stream.read(Settings.FRAMES_PER_SEGMENT)
@@ -93,14 +90,14 @@ try:
             #if sample.speech_probability <= 0.60:
             #    print(f"speech probability: {sample.speech_probability}")
             if sample.speech_probability > 0.60: 
-                for recognizer in recognizers:
-                    recognizer.append_data(sample.mfcc_get().T, timestamp_error)
-                    timestamp_error = 0
-                    recognizer.train()
-                    recognizer.check_for_speaker_change()
-                    recognizer.adjust()
+                for diarizer in diarizers:
+                    diarizer.append_data(sample.mfcc_get().T, silent_seconds)
+                    silent_seconds = 0
+                    diarizer.train()
+                    diarizer.check_for_speaker_change()
+                    diarizer.is_the_model_trained()
             else:
-                timestamp_error += Settings.SEGMENT_DURATION_MS / 1000
+                silent_seconds += Settings.SEGMENT_DURATION_MS / 1000
                 
 except KeyboardInterrupt:
     print("Stopped recording")
@@ -112,5 +109,5 @@ finally:
     pass
 
 if Settings.MAKE_PLOTS:
-    for recognizer in recognizers:
-        recognizer.plot()
+    for diarizer in diarizers:
+        diarizer.plot()
