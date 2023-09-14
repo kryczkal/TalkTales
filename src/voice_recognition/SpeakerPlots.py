@@ -3,6 +3,7 @@ import numpy as np
 from math import ceil, sqrt
 import itertools
 from Speaker import Speaker
+
 class SpeakerPlots:
     def __init__(self, id) -> None:
         self.plots = {}
