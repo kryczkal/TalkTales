@@ -46,8 +46,8 @@ class Settings:
     MFCC_MIN_SIZE = MFCC_PER_SEGMENT * MINIMAL_TRAINING_INTERVAL_SEGMENTS
 
     # Parameters that set the magnitude of divergence required to consider the current speaker a "new" one 
-    NUMBER_THRESHOLD = 35 # 0
-    PERCENTAGE_THRESHOLD = 0.40
+    NUMBER_THRESHOLD = 25 # 0
+    PERCENTAGE_THRESHOLD = 0.20
 
     # --------------------------
     # Debugging settings

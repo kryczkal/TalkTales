@@ -16,7 +16,7 @@ audio = pyaudio.PyAudio()
 
 diarizer = Diarizer()
 
-READ_FROM_FILE = True
+READ_FROM_FILE = False
 
 if READ_FROM_FILE:
     filename='assets/nag2.wav'

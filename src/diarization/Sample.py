@@ -22,15 +22,11 @@ class VoiceSample:
     # Vad settings used in spech probability tests
     # Here u can inject whatever vad module u want to use
     torchaudio.set_audio_backend("soundfile")
-    torch.set_num_threads(2)
-    vad, __ = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+    torch.set_num_threads(1)
+    vad, _ = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                                 model='silero_vad',
                                 force_reload=True)
     
-    def __get_speech_prob(self) -> float:
-        tensor = torch.from_numpy(self.data_convert())
-        return self.vad(tensor, Settings.FREQUENCY).item()
-
     # WARNING - fast workaround
     silent_seconds = 0
 
@@ -45,10 +41,16 @@ class VoiceSample:
         self.mfcc = None
         self.speech_probability = None
     
-    def perform_speech_test(self) -> bool:
-        self.speech_probability = self.__get_speech_prob()
+    def __get_speech_prob(self) -> float:
+        tensor = torch.from_numpy(self.data_convert())
+        self.speech_probability = self.vad(tensor, Settings.FREQUENCY).item()
+        
+        return self.speech_probability
 
-        if not self.speech_probability >= Settings.SPEECH_PROB_THRESHOLD:
+    def if_is_speech(self) -> bool:
+        self.__get_speech_prob()
+
+        if self.speech_probability < Settings.SPEECH_PROB_THRESHOLD:
             self.silent_seconds += Settings.SEGMENT_DURATION_S
             return False
         else:
@@ -86,6 +88,6 @@ class VoiceSample:
         self.data = np.frombuffer(self.byte_data, dtype=Settings.DATA_FORMAT)
 
         if Settings.STREAM_FORMAT == py.paInt16: # <-------------------------- TODO
-            self.data = self.data.astype(np.float32, order='C') / np.float32(Settings.MAX_INT16)
+            self.data = self.data.astype(Settings.DATA_FORMAT, order='C') / Settings.DATA_FORMAT(Settings.MAX_INT16)
             
         return self.data

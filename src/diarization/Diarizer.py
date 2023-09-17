@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 from .Speaker import Speaker, kl_distance
 from ..Settings import Settings
@@ -24,7 +25,7 @@ class Diarizer:
         
         # Speaker Models
         self.current_speaker = Speaker(0)
-        self.hypothetical_speaker = Speaker(-1)
+        self.hypothetical_speaker = Speaker(1)
         
         self.speakers = [] 
         # A list of speaker models for future usage 
@@ -61,14 +62,14 @@ class Diarizer:
         """
         # if the mfcc vector empty is empty we need to initialize it
         if self.mfcc_vectors_array is None:
-            self.mfcc_vectors_array = mfcc_vectors_array # TODO: is this legit if these are references?
+            self.mfcc_vectors_array = mfcc_vectors_array
             return
         
         self.mfcc_vectors_array = np.append(self.mfcc_vectors_array, mfcc_vectors_array, axis=0)
         self.vectors_in_mfcc_array += Settings.MFCC_PER_SEGMENT
 
          # We have to make up for the Samples that did not pass VAD test and correct the timer
-        self.elapsed_time_seconds += Settings.SEGMENT_DURATION_MS / 1000 + silent_seconds
+        self.elapsed_time_seconds += Settings.SEGMENT_DURATION_S + silent_seconds
 
 
     def train(self) -> None:
@@ -99,21 +100,23 @@ class Diarizer:
         self.divergences.append(divergence)
 
         if Settings.MAKE_PLOTS:
-                self.plotter.add_to_plot(self.current_speaker.id, self.elapsed_time_seconds, divergence)
+            self.plotter.add_to_plot(self.current_speaker.id, self.elapsed_time_seconds, divergence)
         if self.if_speaker_changed():
             if Settings.RECOGNIZER_LOG_SPEAKER_CHANGE:
-                print(f"Speaker change on model {self.id}!")
+                print(f"Speaker change on model {self.id}! divergence {self.divergences[-1]}")
                 
             self.save_current_speaker()
-            self.current_speaker = Speaker(self.n_of_speakers)
-            self.current_speaker.model_train(self.mfcc_vectors_array[-Settings.MFCC_MIN_SIZE:])                 
+            self.current_speaker = self.hypothetical_speaker
+            self.n_of_speakers+=1
+            self.hypothetical_speaker = Speaker(self.n_of_speakers)               
             self.mfcc_vectors_array = self.mfcc_vectors_array[-Settings.MFCC_MIN_SIZE:]
             self.vectors_in_mfcc_array = Settings.MFCC_MIN_SIZE
-            self.n_of_speakers+=1
 
-            print(self.elapsed_time_seconds - Settings.SEGMENT_DURATION_MS / 1000) # print when was the speaker change
+            print(self.elapsed_time_seconds - Settings.SEGMENT_DURATION_S) # print when was the speaker change
             self.divergences.clear()
             return True
+        
+        # if no changes 
         return False
     
     def if_enough_data(self) -> bool:
@@ -140,12 +143,12 @@ class Diarizer:
         Returns a flag if a new speaker has been detected.
         """
 
-        sample = VoiceSample(byte_data)
+        sample = VoiceSample(copy.copy(byte_data))
         # Returns if passed byte data is not valid
-        if not sample.perform_speech_test:
+        if not sample.if_is_speech():
             return False
 
-        self.append_data(sample.mfcc_get(), VoiceSample.silent_seconds)
+        self.append_data(sample.mfcc_get().T, VoiceSample.silent_seconds)
         # We check for speaker changes every SETTINGS.TEST_DELAY_IN_MS
         if self.test_delay_counter < Settings.TEST_DELAY_IN_MS:
             self.test_delay_counter += Settings.SEGMENT_DURATION_MS
