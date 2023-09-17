@@ -2,8 +2,6 @@ time_start = 0
 import pyaudio
 import numpy as np
 import time as t
-import torch
-import torchaudio
 import os
 from tqdm import tqdm
 
@@ -16,26 +14,12 @@ from src.diarization.Diarizer import Diarizer
 import itertools
 audio = pyaudio.PyAudio()
 
-torchaudio.set_audio_backend("soundfile")
-torch.set_num_threads(1)
-vad, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
-                              model='silero_vad',
-                              force_reload=True)
-(get_speech_timestamps,
- save_audio,
- read_audio,
- VADIterator,
- collect_chunks) = utils
-
-rn = np.random.RandomState(26)
-
-# Random Recongnizers
-diarizers = [Diarizer()]
+diarizer = Diarizer()
 
 READ_FROM_FILE = True
 
 if READ_FROM_FILE:
-    filename='src/diarization/nag2.wav'
+    filename='assets/nag2.wav'
     filesize = os.path.getsize(filename)
  
     with open(filename, 'rb') as wav:
@@ -65,39 +49,11 @@ try:
                     break
                 pbar.update(1)
 
-                sample = VoiceSample(byte_data)
-                try:
-                    sample.speech_probability =  vad(torch.from_numpy(sample.data_convert()), Settings.FREQUENCY).item()
-                except ValueError:
-                    sample.speech_probability = 0.0
-                    print(ValueError)
-
-                #if sample.speech_probability <= 0.60:
-                #    print(f"speech probability: {sample.speech_probability}")
-                if sample.speech_probability > 0.60: 
-                    for diarizer in diarizers:
-                        diarizer.diarize(sample.mfcc_get().T, silent_seconds)
-                        silent_seconds = 0
-                else:
-                    silent_seconds += Settings.SEGMENT_DURATION_MS / 1000
+                diarizer.diarize(byte_data)
     else:
         while(True):
             byte_data = stream.read(Settings.FRAMES_PER_SEGMENT)
-
-            sample = VoiceSample(byte_data)
-            sample.speech_probability =  vad(torch.from_numpy(sample.data_convert()), Settings.FREQUENCY).item()
-
-            #if sample.speech_probability <= 0.60:
-            #    print(f"speech probability: {sample.speech_probability}")
-            if sample.speech_probability > 0.60: 
-                for diarizer in diarizers:
-                    diarizer.append_data(sample.mfcc_get().T, silent_seconds)
-                    silent_seconds = 0
-                    diarizer.train()
-                    diarizer.check_for_speaker_change()
-                    diarizer.is_the_model_trained()
-            else:
-                silent_seconds += Settings.SEGMENT_DURATION_MS / 1000
+            diarizer.diarize(byte_data)
                 
 except KeyboardInterrupt:
     print("Stopped recording")
@@ -109,5 +65,4 @@ finally:
     pass
 
 if Settings.MAKE_PLOTS:
-    for diarizer in diarizers:
-        diarizer.plot()
+    diarizer.plot()

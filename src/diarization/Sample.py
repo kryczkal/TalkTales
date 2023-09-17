@@ -2,9 +2,14 @@ import numpy as np
 import librosa
 import librosa.feature
 import pyaudio as py
-from ..Settings import Settings
 import warnings
+
+from ..Settings import Settings
 warnings.filterwarnings("ignore")
+
+# used in speech tests
+import torch
+import torchaudio
 
 # TODO CONSIDER RUNNING IN PARALLEL 
 
@@ -13,18 +18,44 @@ class VoiceSample:
     Class used to represent a single audio sample. Contains raw byte data, converted data, \n
     timestamp of object creation and methods to calculate mfcc of the sample.
     """
-    def __init__(self, byte_data: bytes, is_speech: float = None, time_stamp: int = None):
+ 
+    # Vad settings used in spech probability tests
+    # Here u can inject whatever vad module u want to use
+    torchaudio.set_audio_backend("soundfile")
+    torch.set_num_threads(2)
+    vad, __ = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+                                model='silero_vad',
+                                force_reload=True)
+    
+    def __get_speech_prob(self) -> float:
+        tensor = torch.from_numpy(self.data_convert())
+        return self.vad(tensor, Settings.FREQUENCY).item()
+
+    # WARNING - fast workaround
+    silent_seconds = 0
+
+    def __init__(self, byte_data: bytes):
         """
         Initializes VoiceSample class with byte formatted audio data,
         is_speech flag indicating where audio has speech or not, and 
         timestamp of the object.
         """
         self.byte_data = byte_data
-        self.time_stamp = time_stamp
-        self.speech_probability = is_speech
         self.data = None
         self.mfcc = None
+        self.speech_probability = None
     
+    def perform_speech_test(self) -> bool:
+        self.speech_probability = self.__get_speech_prob()
+
+        if not self.speech_probability >= Settings.SPEECH_PROB_THRESHOLD:
+            self.silent_seconds += Settings.SEGMENT_DURATION_S
+            return False
+        else:
+            self.silent_seconds = 0
+            return True
+
+
     def mfcc_get(self):
         """
         Computes and returns Mfcc components of audio data.
