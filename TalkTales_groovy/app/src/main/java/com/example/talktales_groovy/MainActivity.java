@@ -47,14 +47,14 @@ public class MainActivity extends AppCompatActivity {
         if(!Python.isStarted())
             Python.start(new AndroidPlatform(this));
         Python py = Python.getInstance();
-        final PyObject pyobj = py.getModule("script");
+        final PyObject pyObj = py.getModule("script");
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 if(!check) {
-                    PyObject obj = pyobj.callAttr("main");
+                    PyObject obj = pyObj.callAttr("main");
                     button.setImageResource(R.drawable.round_mic_off_24);
                     check = true;
                     try{
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                     catch (Exception e){
                         e.printStackTrace();
                     }
-                    textview.setText(obj.toString());
+                    textview.setText(textview.getText() + obj.toString());
                 }
                 else{
                     button.setImageResource(R.drawable.round_mic_24);
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     mediaRecorder.release();
                     mediaRecorder = null;
                     Toast.makeText(getApplicationContext(), "Recording is stopped", Toast.LENGTH_SHORT).show();
-                    textview.setText("");
+                    // textview.setText("");
                 }
             }
         });
