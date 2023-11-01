@@ -5,14 +5,32 @@
 <img src="assets/logo_full.png" alt="Logo" width="160" height="160">
 </div>
 
-## About the project
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Motivation](#motivation)
+3. [Technologies](#technologies)
+4. [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+5. [Usage](#usage)
+    - [Main Application](#main-application)
+    - [Utilities](#utilities)
+6. [Roadmap](#roadmap)
+7. [Authors](#authors)
+8. [License](#license)
+## Introduction
 
+TalkTales is a specialized tool designed to assist deaf and hard-of-hearing individuals in their daily interactions. 
+Unlike conventional speech-to-text services, TalkTales goes a step further by providing contextual understanding through speaker differentiation.
+
+## Motivation
 The primary objective of this project is to develop a specialized tool aimed at assisting deaf individuals in their 
 day-to-day interactions. While the overarching goal is to convert spoken language into text, 
 the unique aspect of this project lies in its approach to speaker differentiation.
 By highlighting changes in the speaker's voice within the transcribed text, our tool aims to offer an 
 enhanced contextual understanding, a feature often missing in traditional speech-to-text services.
 
+## Technologies
 We leverage the open-source Vosk model for the core speech-to-text translation. 
 However, our methodology diverges from mainstream solutions, as we are intent on reducing our dependence on machine learning algorithms. 
 The goal is not merely to create a functional tool but to deepen our understanding of sound and voice phenomena. 
@@ -47,7 +65,7 @@ pip install -r requirements.txt
 You are ready to go
 
 ## Usage
-### Main App
+### Main Application
 Run the application with
 
 ```shell
@@ -75,14 +93,10 @@ python DiarizationTester.py [optional: filename]
 or
 
 ```shell
-./DiarizationTester.py [optinal: filename]
+./DiarizationTester.py [optional: filename]
 ```
 #### Suggestions Library
-The suggestions folder is an experimental answer to the following problem: 'how to deal with artifacts in
-speech-to-text algorithms'. Given that speech-to-text algorithms are imperfect, and minor artifacts in them can greatly 
-disrupt the flow of the conversation, we've wanted to make a second-degree security measure. That would be scanning the
-sentences for unlikely utterances, and highlighting them as 'unlikely', then providing the suggested, most probable word.
-This is achieved with herbert language model, unfortunately turned out to work too slow for real time usage.
+The "Suggestions" folder serves as an experimental solution to address the challenges posed by artifacts in speech-to-text algorithms. These algorithms, while impressive, are not flawless. Even minor errors can significantly impede the smoothness of a conversation. To mitigate this, we've implemented a secondary layer of security that scans the transcribed sentences for anomalies. When it identifies an 'unlikely' word or phrase, it flags it as such and offers a more probable alternative. This enhancement leverages the Herbert language model. Unfortunately this approach has a limitation: it's too slow for real-time applications.
 
 It can be tested with:
 ##### 
@@ -95,10 +109,7 @@ or
 ```
 The script will ask for input sentences, and struggle to find improbable utterances in it, and suggest improvements.
 #### Matlab Folder
-The matlab folder provides simple scripts that were used during the stage of acquiring sound samples in different places.
-In order to analyze human speech in different environments and construct a tool that can diarize human speech, 
-we've made a set of different wave plots, spectrograms, mel spectrograms etc. In the early stages of development,
-this served as a reference for our understanding of human speech.
+The "Matlab" folder contains a suite of streamlined scripts designed specifically for the acquisition of sound samples across diverse settings. These scripts are integral to our broader project, which aims to analyze human speech in various environments and build a speech diarization tool. To this end, we generated a comprehensive range of auditory visualizations, including wave plots, spectrograms, and mel spectrograms. During the initial phases of our research and development, these visualizations functioned as foundational references, enhancing our understanding of the acoustics and patterns of human speech.
 
 ## Roadmap
 
