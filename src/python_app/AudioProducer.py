@@ -14,12 +14,12 @@ def produce_audio(stt_output: SimpleQueue, sr_output: SimpleQueue,
     """
 
     # duration = 1000.0
-    stream = pyaud.PyAudio().open(format = Settings.STREAM_FORMAT,
-                                  channels = Settings.CHANNELS,
-                                  rate = Settings.FREQUENCY,
-                                  frames_per_buffer = Settings.FRAMES_PER_SEGMENT,
-                                  input = True, 
-                                )
+    stream = pyaud.PyAudio().open(format=Settings.STREAM_FORMAT,
+                                  channels=Settings.CHANNELS,
+                                  rate=Settings.FREQUENCY,
+                                  frames_per_buffer=Settings.FRAMES_PER_SEGMENT,
+                                  input=True,
+                                  )
 
     while True:
         data = stream.read(Settings.FRAMES_PER_SEGMENT)

@@ -1,39 +1,28 @@
 import torch
-from sys import argv
 from transformers import AutoTokenizer, AutoModelForMaskedLM, pipeline
 from typing import List
 from copy import deepcopy
-<<<<<<< HEAD
-=======
 import numpy as np
 
 # pip install numpy
 # pip install torch
 # pip install transformers
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
 
 # suppress pool size warnings
 from transformers import logging
+
 logging.set_verbosity_error()
 
-#Settings
-<<<<<<< HEAD
-PROBABILITY_TRESHOLD = 0.1
-MODEL_NAME = "allegro/herbert-large-cased"
-TOKENIZER_NAME = "allegro/herbert-large-cased"
-DEBUG = 1
-HARD_DEBUG = 1
-=======
-DYNAMIC_TRESHOLD = True
+# Settings
+DYNAMIC_THRESHOLD = True
 PERCENTILE_VALUE = 25
-PROBABILITY_TRESHOLD = 0.1
+PROBABILITY_THRESHOLD = 0.1
 MODEL_NAME = "allegro/herbert-large-cased"
 TOKENIZER_NAME = "allegro/herbert-large-cased"
 DEBUG = 0
-HARD_DEBUG = 0
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
-#
-if (DEBUG!=1):
+HARD_DEBUG: int = 0
+
+if DEBUG != 1:
     HARD_DEBUG = 0
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -45,15 +34,19 @@ else:
 MODEL = AutoModelForMaskedLM.from_pretrained(MODEL_NAME).to(device)
 TOKENIZER = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
 fill_mask = pipeline("fill-mask", model=MODEL_NAME, tokenizer=MODEL_NAME, device=device.index)
+
+
 #
 
-def getWordProbability(tokens: List[str]) -> List[float]:
+def get_word_probability(
+        tokens: List[str]
+) -> List[float]:
     """Get probabilities of each word's presence in a sentence
     """
 
-    if(DEBUG):
+    if DEBUG:
         print("")
-    
+
     # Calculate probability of each word being present in the sentence
     probabilities = {}
     for index, token in enumerate(tokens):
@@ -79,205 +72,206 @@ def getWordProbability(tokens: List[str]) -> List[float]:
     total_probability = 0
     syllable_count = 0
     probabilities_of_words = []
-<<<<<<< HEAD
-    print("Zamieniam zdanie na Tokeny:",tokens)
-=======
-    if (HARD_DEBUG):
-        print("Zamieniam zdanie na Tokeny:",tokens)
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
+
+    if HARD_DEBUG:
+        print("Splitting sentence to tokens:", tokens)
+
     for index, token in enumerate(tokens):
-        syllable_count+=1
-        total_probability += probabilities[token] 
+        syllable_count += 1
+        total_probability += probabilities[token]
         if token.find("</w>") != -1:
-            probabilities_of_words.append(total_probability/syllable_count)
+            probabilities_of_words.append(total_probability / syllable_count)
             syllable_count = 0
             total_probability = 0
     return probabilities_of_words
 
+
 #
-def generateSuggestions(sentence: str, index: int, tokens_i_mod: int ,tokens: List[str]) -> str:
-    if(DEBUG):
+def generate_suggestions(
+        sentence: List[str],
+        index: int,
+        tokens_i_mod: int,
+        tokens: List[str]
+) -> str:
+    if DEBUG:
         print("")
+
     mask_token = TOKENIZER.mask_token
-    if(HARD_DEBUG):
-        print("index:",index)
-        print("tokens_i_mod",tokens_i_mod)
-        print("tokens_index",tokens_i_mod+index)
+
+    if HARD_DEBUG:
+        print("index:", index)
+        print("tokens_i_mod", tokens_i_mod)
+        print("tokens_index", tokens_i_mod + index)
         print("")
-    if(HARD_DEBUG):
-        print("Maskuje tokeny reprezentujące mało prawdopodobne słowo")
-    if(HARD_DEBUG):
-        print("Sprawdzam czy słowo jest reprezentowane przez kilka tokenow")
-    #Jesli nie znalazlo znaku zakonczenia wyrazu
-    if (tokens[index+tokens_i_mod].find("</w>") == -1):
-        if(HARD_DEBUG):
+
+    if HARD_DEBUG:
+        print("Masking low probability worlds tokens")
+
+    if HARD_DEBUG:
+        print("Checking whether world is represented by multiple tokens")
+
+    # If end of world token is not found
+    if tokens[index + tokens_i_mod].find("</w>") == -1:
+        if HARD_DEBUG:
             print("Tak")
-        #Kopiuje index wyrazu od ktorego zaczynamy
-        new_index = deepcopy(index+tokens_i_mod)
-        #Dopoki nie znajduje znaku zakonczenia wyrazu dodaje usuwam tokeny
-        while(tokens[new_index].find("</w>") == -1):
-            if(HARD_DEBUG):
-                print(f"Tokeny tworzące: {tokens[new_index]}")
+
+        # copying starting world index
+        new_index = deepcopy(index + tokens_i_mod)
+
+        # removing tokens till end of world token
+        while tokens[new_index].find("</w>") == -1:
+            if HARD_DEBUG:
+                print(f"Word-building tokens: {tokens[new_index]}")
+
             tokens.pop(new_index)
-            #new_index += 1
-        #Indeks ktory zakancza wyraz zamieniam na <mask>
-        if(HARD_DEBUG):
-            print(f"Teraz ostatni token: {tokens[new_index]}")
+            # new_index += 1
+
+        # replacing end of world token to <mask>
+        if HARD_DEBUG:
+            print(f"Last token: {tokens[new_index]}")
+
         tokens[new_index] = mask_token
     else:
-         if(HARD_DEBUG):
+        if HARD_DEBUG:
             print("Nie")
-         tokens[index+tokens_i_mod] = mask_token
-    
-    #fix z czapy
-    if(index+tokens_i_mod == len(tokens)-1):
+        tokens[index + tokens_i_mod] = mask_token
+
+    # wtf is going on
+    if index + tokens_i_mod == len(tokens) - 1:
         tokens.append(".")
     masked_sentence = TOKENIZER.convert_tokens_to_string(tokens)
-    if(HARD_DEBUG):
-        print("Zamaskowane Zdanie:", masked_sentence)
 
+    if HARD_DEBUG:
+        print("Masked sentence:", masked_sentence)
     result = fill_mask(masked_sentence)
-    # Zamień zamaskowane słowo na najbardziej prawdopodobne
-    tokens[index+tokens_i_mod] = result[0]["token_str"] + ' '
+
+    # Replacing masked world with most probable ones
+    tokens[index + tokens_i_mod] = result[0]["token_str"] + ' '
     new_sentence = TOKENIZER.convert_tokens_to_string(tokens)
-    if(HARD_DEBUG):
-        print("Nowe Zdanie:", new_sentence)
-    #print(new_sentence)
+
+    if HARD_DEBUG:
+        print("New sentence:", new_sentence)
+
     new_sentence = new_sentence.split(' ')
-    if(HARD_DEBUG):
-        print(f"Zwracam Indeks poprawionego slowa: {index}")
-    if(DEBUG):
-        print(f"Mialem poprawic: {sentence[index]}")
-        print(f"Poprawiłem na: {new_sentence[index]}")
-    if(index+tokens_i_mod == len(tokens)-1):
+    if HARD_DEBUG:
+        print(f"Returning upgraded sentence index: {index}")
+
+    if DEBUG:
+        print(f"Not upgraded version: {sentence[index]}")
+        print(f"Upgraded version: {new_sentence[index]}")
+
+    if index + tokens_i_mod == len(tokens) - 1:
         tokens.pop()
     return new_sentence[index]
 
-#
-def upgradeSentence(sentence: str) -> str:
 
-    #Operujemy na kopi zdania.
-    if(DEBUG):
-        print("")
-        print("Zaczynamy")
-        print("")
-    #Usuwamy ze zdania niepotrzebne znaki
-    if(DEBUG):
-        print("Usuwam z zdania przecinki i kropki")
-    sentence = sentence.replace(',','')
-    sentence = sentence.replace('.','')
-    if(DEBUG):
-        print("Zdanie po poprawkach:", sentence)
-    #Tokenizujemy zdanie
+#
+def upgrade_sentence(
+        sentence: str
+) -> str:
+
+    # All transformation are done on the copy
+
+    if DEBUG:
+        print("\nLet's begin\n")
+
+    if DEBUG:
+        print("Removing dots and commas from the sentence")
+
+    # Removing irrelevant characters from the sentence
+    sentence = sentence.replace(',', '')
+    sentence = sentence.replace('.', '')
+
+    if DEBUG:
+        print("Sentence after cleaning:", sentence)
+    # Sentence tokenization
     tokens = TOKENIZER.tokenize(sentence)
 
-    #rozbijamy zdanie na wyrazy
-    
+    # Splitting sentence to world
     sentence = sentence.split(' ')
-    
-    if(DEBUG):
-        print("Rozbijam zdanie na wyrazy:", sentence)
-        print("Liczba slow:",len(sentence))
 
-    if(HARD_DEBUG):
-            print("Kopiuje tokeny oraz zdanie")
+    if DEBUG:
+        print("Splitting sentence to words:", sentence)
+        print("Words count:", len(sentence))
+
+    if HARD_DEBUG:
+        print("Copying tokens and sentence")
 
     tokens_backup = deepcopy(tokens)
     sentence_backup = deepcopy(sentence)
 
-    if(DEBUG):
-        print("Kalkuluje prawdopodobienstwo wystepowania kazdego slowa")
-    #badamy prawdopodobienstwo wystepowania kazdego slowa
-    probabilities = getWordProbability(tokens)
-<<<<<<< HEAD
+    if DEBUG:
+        print("Calculating probability of each world")
 
-=======
-    PROBABILITY_TRESHOLD = np.percentile(probabilities, PERCENTILE_VALUE)
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
-    if(DEBUG):
-        print("Wyniki: ", probabilities)
-        print("Liczba prawdopodobieństw:",len(probabilities))
-        
-    #dodajemy w petli sugestie dla malo prawdopodobnych slow
+    probabilities = get_word_probability(tokens)
+
+    probability_threshold = np.percentile(probabilities, PERCENTILE_VALUE)
+
+    if DEBUG:
+        print("Results: ", probabilities)
+        print("Probabilities acquired:", len(probabilities))
+
+    # Adding suggestions to replace less probable words
     added_suggestions = 0
 
-<<<<<<< HEAD
-=======
     suggested_words = {}
 
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
-    if(DEBUG):
-        print("Generuje sugestie dla każdego mało prawdopodobnego słowa")
-    
+    if DEBUG:
+        print("Generating suggestions for each less probable word")
+
     tokens_i_mod = 0
     for i in range(len(probabilities)):
-        #Jesli slowo ma niskie prawdopodobienstwo wystepowania, generujemy sugestie
-        if(probabilities[i] < PROBABILITY_TRESHOLD):
-            if(HARD_DEBUG):
-                print("Zdanie",sentence)
-                print("Tokeny",tokens)
-            #Generujemy sugestie
-            if(DEBUG):
-                print("")
-                print("Słowo:", sentence[i])
-                print("Mało prawdopodobne:", probabilities[i])
 
-            suggestion = generateSuggestions(sentence, i, tokens_i_mod, tokens)
+        if probabilities[i] < probability_threshold:
 
-            #suggestion = " (" + suggestion + ") "
-            #sentence.insert(i + added_suggestions + 1, suggestion)
-            # print("Index ",i," Slowo:",sentence[i]," Proponuje zamienic na: ", suggestion)
-<<<<<<< HEAD
-            if(HARD_DEBUG):
-                print("Zamieniam slowo:", sentence[i])
-                print("Na:", suggestion)
-                
+            if HARD_DEBUG:
+                print("Sentence:", sentence)
+                print("Tokens: ", tokens)
+
+            if DEBUG:
+                print("\bWord:", sentence[i])
+                print("Less probable:", probabilities[i])
+
+            suggestion = generate_suggestions(sentence, i, tokens_i_mod, tokens)
+
+            if HARD_DEBUG:
+                print("Changing word:", sentence[i])
+                print("To:", suggestion)
+
             sentence[i] = suggestion
 
-            if(HARD_DEBUG):
-                print("Zamienione zdanie:", " ".join(sentence))
-=======
-            #if(HARD_DEBUG):
-                #print("Zamieniam slowo:", sentence[i])
-                #print("Na:", suggestion)
-                
-            #sentence[i] = suggestion
-            suggested_words[i] = suggestion
+            if HARD_DEBUG:
+                print("Changing sentence:", " ".join(sentence))
 
-            #if(HARD_DEBUG):
-            #    print("Zamienione zdanie:", " ".join(sentence))
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
-            # print("CALKIEM PRAWDOPODOBNE", " ".join(new_sentence))
-            #sentence[i] = suggestion
             added_suggestions += 1
 
-            if(HARD_DEBUG):
-                print("Liczba zmienionych slow:", added_suggestions)
+            if HARD_DEBUG:
+                print("Changed words count:", added_suggestions)
 
             tokens = deepcopy(tokens_backup)
             sentence = deepcopy(sentence_backup)
-        #Wykrywamy slowa ktore skladaja sie z paru tokenow i aktualizujemy modyfikator indeksu tak by wszystko sie zgadzalo
-        if(i+tokens_i_mod < len(tokens)):
-            while (tokens[i+tokens_i_mod].find("</w>") == -1 and i+tokens_i_mod < len(tokens)):
-                if(HARD_DEBUG):
+
+        # Detecting words, which are built with more than one token and updating index modifier to ensure correctness
+
+        if i + tokens_i_mod < len(tokens):
+            while tokens[i + tokens_i_mod].find("</w>") == -1 and i + tokens_i_mod < len(tokens):
+                if HARD_DEBUG:
                     print("")
-                    print("Wykryto slowo skladajace sie z wielu tokenow:",tokens[i+tokens_i_mod])
-                    print("index:",i)
-                    print("tokens_i_mod",tokens_i_mod)
-                    print("tokens_index",tokens_i_mod+i)
-                tokens_i_mod +=1
-                if(HARD_DEBUG):
-                    print("Dostosowuje modyfikator",tokens_i_mod)
+                    print("Detected world built with more than one token:", tokens[i + tokens_i_mod])
+                    print("index:", i)
+                    print("tokens_i_mod", tokens_i_mod)
+                    print("tokens_index", tokens_i_mod + i)
+                tokens_i_mod += 1
+
+                if HARD_DEBUG:
+                    print("Fitting in modifier:", tokens_i_mod)
                     print("")
 
-<<<<<<< HEAD
-=======
     sorted_new_words = sorted(suggested_words.items(), key=lambda x: x[0], reverse=True)
 
     for index, word in sorted_new_words:
-        word = "("+word+"?)"
-        sentence.insert(index+1, word)
+        word = "(" + word + "?)"
+        sentence.insert(index + 1, word)
 
     print(" ".join(sentence))
->>>>>>> 71329a0cd55e72cdf432961acf5d205cd659c7e5
     return " ".join(sentence)

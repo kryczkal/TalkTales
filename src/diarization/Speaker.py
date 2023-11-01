@@ -19,7 +19,7 @@ class Speaker:
 
     def model_train(self, mfcc_vectors_array: np.ndarray) -> None:
         """Trains speaker GMM model using provided data"""
-        if (mfcc_vectors_array.shape[0] >= Settings.MFCC_MAX_SIZE):
+        if mfcc_vectors_array.shape[0] >= Settings.MFCC_MAX_SIZE:
             self.training_done = True
             return
         self.model.fit(mfcc_vectors_array)
@@ -28,7 +28,7 @@ class Speaker:
         """Returns the speaker model for passage into other functions"""
         return self.model
     
-    #def data_append(self, sample_data):
+    # def data_append(self, sample_data):
     #    self.data = np.append(self.data, sample_data)
 
 
@@ -38,7 +38,7 @@ def kl_distance(gmm_x: GaussianMixture, gmm_y: GaussianMixture, n_samples: int =
     
     Args:
         gmm_x (object): Gaussian Mixture Model object \n
-        mm_y (object): Gaussian Mixture Model object \n
+        gmm_y (object): Gaussian Mixture Model object \n
         n_samples (int): Number of samples used in comparison
     
     Returns:
@@ -52,6 +52,7 @@ def kl_distance(gmm_x: GaussianMixture, gmm_y: GaussianMixture, n_samples: int =
         
         Note that the KL divergence is a measure of how much one probability distribution diverges from another, and it is always non-negative. 
         The KL divergence between two GMMs can be used to compare their similarity or dissimilarity.
+        :param gmm_y:
     """
     samples, _ = gmm_x.sample(n_samples)
     log_prob_X = gmm_x.score_samples(samples)

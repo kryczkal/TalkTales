@@ -9,3 +9,4 @@ src/voice-recognition/read_with_vad.py
 *vosk-model-*
 recongnizer/
 .vscode
+venv/
