@@ -6,7 +6,6 @@ plots/*
 src/suggestions/en-pl.txt/
 src/voice-recognition/read_with_vad.py
 *.wav
-*vosk-model-*
 recongnizer/
 .vscode
 venv/

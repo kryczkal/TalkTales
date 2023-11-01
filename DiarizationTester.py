@@ -1,8 +1,12 @@
+#!/bin/python
+
 import pyaudio
 import os
+import sys
 from tqdm import tqdm
 from src.Settings import Settings
 from src.diarization.Diarizer import Diarizer
+
 
 """
     This file is used to invoke Diarizers components without application frontend.
@@ -14,7 +18,11 @@ from src.diarization.Diarizer import Diarizer
 """
 
 READ_FROM_FILE = True
-filename = 'assets/nag2.wav'
+
+if len(sys.argv) == 1:
+    filename = 'assets/nag2.wav'
+else:
+    filename = sys.argv[1]
 
 time_start = 0
 audio = pyaudio.PyAudio()

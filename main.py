@@ -1,3 +1,5 @@
+#!/bin/python
+
 from queue import SimpleQueue
 from threading import Thread, Event
 from time import sleep
@@ -44,8 +46,7 @@ if __name__ == '__main__':
         daemon=True
     )
 
-    # Process raw byte data into packets consisting
-    # of timestamps and speaker flags
+    # Process raw byte data into packets consisting of timestamps and speaker flags
     voice_rec_thread = Thread(
         target=speaker_detector,
         args=(voice_rec_audio, voice_rec_data, {
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
     def key(x: tuple):
         return x[0]
-
+    
     # Writes console with correct color
     def rewrite_console(curr_color: int, transcription: list):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -82,7 +83,7 @@ if __name__ == '__main__':
                 print(i[1])
             else:
                 print(color(1 + (curr_color := not curr_color)))
-
+    
     # Main loop, no computation here. Only writes console with results.
     # In future this will be main interface backend - frontend
     while True:
