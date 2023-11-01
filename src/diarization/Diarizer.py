@@ -7,48 +7,50 @@ from .Sample import VoiceSample
 
 from .SpeakerPlots import SpeakerPlots
 
+
 class Diarizer:
     """
     The Diarizer class processes and analyzes speech samples to detect and identify different 
     speakers in a conversation. It examines the MFCC vectors of the speech samples and measures 
     the divergence between the current and hypothetical speaker models.
     """
+
     def __init__(self, id: int = 0):
         """
         Constructor for initializing the Diarizer object.
         """
         self.mfcc_vectors_array = None
         # The most important variable, an array of MFCC vectors
-        
-        self.id = id 
-        # id of the diarizer TODO: delete this? Usefull only when running many diarizers at once
-        
+
+        self.id = id
+        # id of the diarizer TODO: delete this? Useful only when running many diarizers at once
+
         # Speaker Models
         self.current_speaker = Speaker(0)
         self.hypothetical_speaker = Speaker(1)
-        
-        self.speakers = [] 
+
+        self.speakers = []
         # A list of speaker models for future usage 
-        
-        self.n_of_speakers = 1 
+
+        self.n_of_speakers = 1
         # We begin with one speaker
         # TODO: Enable Diarizer to recognize past speakers 
 
-        self.vectors_in_mfcc_array = 0 
+        self.vectors_in_mfcc_array = 0
         # number of mfcc vectors currently amassed for the hypothetical speaker
-        
+
         # !!! only needed for plotting !!!
-        self.elapsed_time_seconds = 0 # We count how long is the Diarizer running (for timestamps) in seconds
+        self.elapsed_time_seconds = 0  # We count how long is the Diarizer running (for timestamps) in seconds
         # !!! only needed for plotting !!!
 
-        self.divergences = [] # TODO: wystarcza dwa
+        self.divergences = []  # TODO: two of them are enough
 
-        self.test_delay_counter = 0 # Counts the progress towards SETTINGS.TEST_DELAY_IN_MS
+        self.test_delay_counter = 0  # Counts the progress towards SETTINGS.TEST_DELAY_IN_MS
 
         if Settings.MAKE_PLOTS:
             self.plotter = SpeakerPlots(id)
 
-    def save_current_speaker(self)-> None:
+    def save_current_speaker(self) -> None:
         """
         Adds the current speaker instance to the list of speakers.
         """
@@ -64,13 +66,12 @@ class Diarizer:
         if self.mfcc_vectors_array is None:
             self.mfcc_vectors_array = mfcc_vectors_array
             return
-        
+
         self.mfcc_vectors_array = np.append(self.mfcc_vectors_array, mfcc_vectors_array, axis=0)
         self.vectors_in_mfcc_array += Settings.MFCC_PER_SEGMENT
 
-         # We have to make up for the Samples that did not pass VAD test and correct the timer
+        # We have to make up for the Samples that did not pass VAD test and correct the timer
         self.elapsed_time_seconds += Settings.SEGMENT_DURATION_S + silent_seconds
-
 
     def train(self) -> None:
         """
@@ -78,7 +79,7 @@ class Diarizer:
         """
         self.hypothetical_speaker.model_train(self.mfcc_vectors_array[-Settings.MFCC_MIN_SIZE:])
         # Uses only MFCC_MIN_SIZE newest mfcc samples to further speakers comparison
-        
+
         if not self.current_speaker.training_done:
             self.current_speaker.model_train(self.mfcc_vectors_array)
 
@@ -88,10 +89,10 @@ class Diarizer:
         If the difference in KL divergence is greater than a threshold, 
         and the final KL divergence score is above a certain threshold value, 
         then the current_speaker is added to the speakers list and assigned the next available Speaker id. 
-        This method returns a flag indicating whether or not a new Speaker instance was added to the speaker list.
+        This method returns a flag indicating whether a new Speaker instance was added to the speaker list.
         
         Returns:
-            flag (bool): Indicates whether or not a new Speaker instance was added to the list of speakers.
+            flag (bool): Indicates whether a new Speaker instance was added to the list of speakers.
                         False: No new Speaker instance was added.
                         True: New Speaker instance was added.
         """
@@ -104,21 +105,21 @@ class Diarizer:
         if self.if_speaker_changed():
             if Settings.RECOGNIZER_LOG_SPEAKER_CHANGE:
                 print(f"Speaker change on model {self.id}! divergence {self.divergences[-1]}")
-                
+
             self.save_current_speaker()
             self.current_speaker = self.hypothetical_speaker
-            self.n_of_speakers+=1
-            self.hypothetical_speaker = Speaker(self.n_of_speakers)               
+            self.n_of_speakers += 1
+            self.hypothetical_speaker = Speaker(self.n_of_speakers)
             self.mfcc_vectors_array = self.mfcc_vectors_array[-Settings.MFCC_MIN_SIZE:]
             self.vectors_in_mfcc_array = Settings.MFCC_MIN_SIZE
 
-            print(self.elapsed_time_seconds - Settings.SEGMENT_DURATION_S) # print when was the speaker change
+            print(self.elapsed_time_seconds - Settings.SEGMENT_DURATION_S)  # print when was the speaker change
             self.divergences.clear()
             return True
-        
+
         # if no changes 
         return False
-    
+
     def if_enough_data(self) -> bool:
         """
         Checks if there's sufficient data (MFCC vectors) to proceed with training or comparisons.
@@ -131,10 +132,9 @@ class Diarizer:
         """
         if len(self.divergences) < 2:
             return False
-        
-        return self.divergences[-1] - self.divergences[-2] > Settings.PERCENTAGE_THRESHOLD*self.divergences[-2] \
+
+        return self.divergences[-1] - self.divergences[-2] > Settings.PERCENTAGE_THRESHOLD * self.divergences[-2] \
             and self.divergences[-1] > Settings.NUMBER_THRESHOLD
-    
 
     def diarize(self, byte_data: bytes) -> bool:
         """
@@ -160,9 +160,12 @@ class Diarizer:
                 # We only need to train the model before check_for_speaker_change()
                 # Not for example every 10ms
                 self.train()
-                if_speaker_changed = self.check_for_speaker_change() # <- this should be not working properly, since it needs two different divergences to work, 
+                if_speaker_changed = self.check_for_speaker_change()  # <- this should be not working properly,
+                # since it needs two different divergences to work
 
-                # If the model is trained we cease training him, and only need vectors for hypothetical speaker (SETTINGS.MFCC_MIN_SIZE)
+                # If the model is trained we cease training him,
+                # and only need vectors for hypothetical speaker (SETTINGS.MFCC_MIN_SIZE)
+
                 if self.current_speaker.training_done:
                     self.vectors_in_mfcc_array = 0
                     self.mfcc_vectors_array = None

@@ -10,7 +10,6 @@ import numpy as np
 
 # suppress pool size warnings
 from transformers import logging
-
 logging.set_verbosity_error()
 
 # Settings
@@ -24,6 +23,7 @@ HARD_DEBUG: int = 0
 
 if DEBUG != 1:
     HARD_DEBUG = 0
+# Checking for GPU and assigning device accordingly
 if torch.cuda.is_available():
     device = torch.device("cuda")
     print(f"Using GPU: {torch.cuda.get_device_name()}")
@@ -31,8 +31,10 @@ else:
     device = torch.device("cpu")
     print("Using CPU")
 
+# Loading pretrained model and tokenizer
 MODEL = AutoModelForMaskedLM.from_pretrained(MODEL_NAME).to(device)
 TOKENIZER = AutoTokenizer.from_pretrained(TOKENIZER_NAME)
+# Initialize fill-mask pipeline
 fill_mask = pipeline("fill-mask", model=MODEL_NAME, tokenizer=MODEL_NAME, device=device.index)
 
 
@@ -41,8 +43,15 @@ fill_mask = pipeline("fill-mask", model=MODEL_NAME, tokenizer=MODEL_NAME, device
 def get_word_probability(
         tokens: List[str]
 ) -> List[float]:
-    """Get probabilities of each word's presence in a sentence
     """
+        Get probabilities of each word's presence in a sentence using masked language models.
+
+        Parameters:
+        - tokens (List[str]): The input list of tokenized words that form the sentence.
+
+        Returns:
+        - List[float]: A list of probabilities corresponding to each word in the sentence.
+        """
 
     if DEBUG:
         print("")
@@ -50,25 +59,26 @@ def get_word_probability(
     # Calculate probability of each word being present in the sentence
     probabilities = {}
     for index, token in enumerate(tokens):
-        # Create masked sentence
+        # Create a version of the sentence with the current token masked out
         masked_sentence = tokens.copy()
         masked_sentence[index] = TOKENIZER.mask_token
         masked_sentence.insert(0, TOKENIZER.cls_token)
         masked_sentence.append(TOKENIZER.sep_token)
 
-        # Convert masked sentence to a vector
+        # Convert the masked sentence into a tensor of token IDs
         output = TOKENIZER.convert_tokens_to_ids(masked_sentence)
         input_tensor = torch.tensor([output]).to(device)
 
-        # Predict probabilities for masked words
+        # Use the masked language model to predict the masked token
         with torch.no_grad():
             output = MODEL(input_tensor)
         predictions = output.logits[0, index + 1].softmax(dim=-1)
 
-        # Calculate the probability of the original word
+        # Calculate the probability of the original token being correct
         probability = predictions[TOKENIZER.convert_tokens_to_ids([token])[0]].item()
         probabilities[token] = probability
 
+    # Initialize counters for aggregating probabilities and syllable counts
     total_probability = 0
     syllable_count = 0
     probabilities_of_words = []
@@ -76,6 +86,7 @@ def get_word_probability(
     if HARD_DEBUG:
         print("Splitting sentence to tokens:", tokens)
 
+    # Aggregate probabilities and syllable counts for each word
     for index, token in enumerate(tokens):
         syllable_count += 1
         total_probability += probabilities[token]
@@ -110,7 +121,7 @@ def generate_suggestions(
     if HARD_DEBUG:
         print("Checking whether world is represented by multiple tokens")
 
-    # If end of world token is not found
+    # Check whether the word at the given index is composed of multiple tokens
     if tokens[index + tokens_i_mod].find("</w>") == -1:
         if HARD_DEBUG:
             print("Tak")
@@ -118,7 +129,7 @@ def generate_suggestions(
         # copying starting world index
         new_index = deepcopy(index + tokens_i_mod)
 
-        # removing tokens till end of world token
+        # Remove tokens until the end-of-word token "</w>" is found
         while tokens[new_index].find("</w>") == -1:
             if HARD_DEBUG:
                 print(f"Word-building tokens: {tokens[new_index]}")
@@ -126,7 +137,7 @@ def generate_suggestions(
             tokens.pop(new_index)
             # new_index += 1
 
-        # replacing end of world token to <mask>
+        # Replace the end-of-word token with a mask token
         if HARD_DEBUG:
             print(f"Last token: {tokens[new_index]}")
 
@@ -134,15 +145,20 @@ def generate_suggestions(
     else:
         if HARD_DEBUG:
             print("Nie")
+        # Directly replace the token at the calculated index with the mask token
         tokens[index + tokens_i_mod] = mask_token
 
-    # wtf is going on
+    # Add a period if this is the last token in the sentence
     if index + tokens_i_mod == len(tokens) - 1:
         tokens.append(".")
+
+    # Convert the token list back to a sentence string
     masked_sentence = TOKENIZER.convert_tokens_to_string(tokens)
 
     if HARD_DEBUG:
         print("Masked sentence:", masked_sentence)
+
+    # Use a fill-mask function to predict the most probable word to replace the mask
     result = fill_mask(masked_sentence)
 
     # Replacing masked world with most probable ones
@@ -162,6 +178,8 @@ def generate_suggestions(
 
     if index + tokens_i_mod == len(tokens) - 1:
         tokens.pop()
+
+    # Return the modified word at the index
     return new_sentence[index]
 
 
@@ -197,6 +215,7 @@ def upgrade_sentence(
     if HARD_DEBUG:
         print("Copying tokens and sentence")
 
+    # Backup of tokens and sentence
     tokens_backup = deepcopy(tokens)
     sentence_backup = deepcopy(sentence)
 
@@ -205,6 +224,7 @@ def upgrade_sentence(
 
     probabilities = get_word_probability(tokens)
 
+    # Calculate the probability threshold
     probability_threshold = np.percentile(probabilities, PERCENTILE_VALUE)
 
     if DEBUG:
@@ -220,6 +240,7 @@ def upgrade_sentence(
         print("Generating suggestions for each less probable word")
 
     tokens_i_mod = 0
+    # Loop through each word and replace if needed
     for i in range(len(probabilities)):
 
         if probabilities[i] < probability_threshold:

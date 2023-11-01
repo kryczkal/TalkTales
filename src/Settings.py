@@ -21,7 +21,7 @@ class Settings:
     MAX_INT16 = 32768
 
     # --------------------------
-    # Mfcc generation paremeters
+    # Mfcc generation parameters
     # --------------------------
 
     MFCC_COMPONENTS = 13
@@ -57,8 +57,3 @@ class Settings:
     N_OF_RECOGNIZERS = 1
     MAKE_PLOTS = True
     RECOGNIZER_LOG_SPEAKER_CHANGE = True
-
-    # --------------------------
-    # No idea 
-    # --------------------------
-    # 48000/100 (1/100 = 10/1000) okienko - 10 ms, 1000ms to sekunda
